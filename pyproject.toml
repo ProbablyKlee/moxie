@@ -1,0 +1,22 @@
+[tool.black]
+line-length = 125
+skip-string-normalization = true
+force-exclude = "LICENSE|pyproject.toml|requirements.txt|README.rst|schema.sql|.+.json|README.md|.+.bat|.+.service|.+.sql"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.11"
+reportUnusedImport = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportIncompatibleMethodOverride = "none"
+reportPrivateUsage = "none"
+exclude = [
+    "**/__pycache__",
+    '.github'
+]
+
+[tool.isort]
+profile = "black"
+combine_as_imports = true
+combine_star = true
+line_length = 125
