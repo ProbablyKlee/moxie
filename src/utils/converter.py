@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 The MIT License (MIT)
 Copyright (c) 2022-Present Lia Marie
@@ -35,13 +37,12 @@ class MaybeMember(Converter):
     This inherits from :class:`discord.ext.commands.Converter` and overrides
     the :meth:`discord.ext.commands.Converter.convert` method.
 
-    Parameters
-    ----------
-    ctx: :class:`discord.ext.commands.Context` (or subclass)
-        The context of the command.
-
-    argument: :class:`str`
-        The argument to convert.
+    Examples
+    --------
+    >>> @commands.command()
+    ... async def example(self, ctx: Context, member: MaybeMember):
+    ...     await ctx.send(f"Member: {member}")
+    ...
     """
 
     async def convert(self, ctx: Context, argument: str) -> typing.Optional[discord.Member]:
@@ -56,6 +57,16 @@ class MaybeMember(Converter):
 
         argument: :class:`str`
             The argument to convert.
+
+        Returns
+        -------
+        :class:`discord.Member` or :class:`None`
+            The member or :data:`None` if not found.
+
+        Raises
+        ------
+        :exc:`discord.ext.commands.errors.MemberNotFound`
+            The member was not found.
         """
         try:
             member = await commands.MemberConverter().convert(ctx, argument)
