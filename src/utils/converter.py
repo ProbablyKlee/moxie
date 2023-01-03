@@ -30,7 +30,7 @@ __all__ = ("MaybeMember",)
 logger = logging.getLogger(__name__)
 
 
-class MaybeMember(Converter):
+class MaybeMember(Converter["MaybeMember"]):
 
     """A custom Member converter that allows for partial matches.
 
