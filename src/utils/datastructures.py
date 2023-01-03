@@ -29,21 +29,16 @@ from typing import (
     Awaitable,
     TypeVar,
     Iterator,
-    ParamSpec,
     Mapping,
-    Iterable,
     MutableMapping,
 )
 from collections.abc import MutableSequence
 from discord.utils import maybe_coroutine
 
-T = TypeVar('T')
-P = ParamSpec('P')
-
 V = TypeVar("V")
 K = TypeVar("K", bound=str)
 
-__all__ = ('MaxSizedList', 'CaseInsensitiveDict')
+__all__ = ('MaxSizeList', 'CaseInsensitiveDict')
 
 
 class PartialCall(List[Any]):
@@ -57,7 +52,7 @@ class PartialCall(List[Any]):
 class MaxSizeList(MutableSequence[Any]):
     def __init__(self, max_size: int) -> None:
         self._max_size = max_size
-        self._list = []
+        self._list: List[Any] = []
 
     def push(self, item: Any) -> None:
         if len(self) == self._max_size:
@@ -90,7 +85,7 @@ class MaxSizeList(MutableSequence[Any]):
 
 class CaseInsensitiveDict(MutableMapping[K, V]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._dict = {}
+        self._dict: MutableMapping[str, V] = {}
         self.update(dict(*args, **kwargs))
 
     def __contains__(self, k: K) -> bool:
@@ -105,7 +100,7 @@ class CaseInsensitiveDict(MutableMapping[K, V]):
     def __setitem__(self, k: K, v: V) -> None:
         super().__setitem__(k.casefold(), v)
 
-    def __iter__(self) -> Iterator[K]:
+    def __iter__(self) -> Iterator[str | K]:
         return iter(self._dict)
 
     def __len__(self) -> int:
