@@ -20,10 +20,7 @@
 CREATE TABLE IF NOT EXISTS user
 (
     user_id bigint NOT NULL,
-    owo_reminder boolean NOT NULL DEFAULT false,
-    hunt_battle_reminder boolean NOT NULL DEFAULT false,
-    huntbot_reminder boolean NOT NULL DEFAULT false,
-    pray_curse_reminder boolean NOT NULL DEFAULT false
+    emoji_server_id bigint NOT NULL
     CONSTRAINT user_pk PRIMARY KEY (user_id)
 );
 
