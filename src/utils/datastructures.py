@@ -26,15 +26,15 @@ from typing import (
     Tuple,
     Any,
     Optional,
-    Iterable,
     Awaitable,
     TypeVar,
     Iterator,
     ParamSpec,
     Mapping,
+    Iterable,
     MutableMapping,
 )
-
+from collections.abc import MutableSequence
 from discord.utils import maybe_coroutine
 
 T = TypeVar('T')
@@ -54,32 +54,38 @@ class PartialCall(List[Any]):
         return asyncio.gather(*(maybe_coroutine(func, *args, **kwargs) for func in self))
 
 
-class MaxSizedList:
-
-    __slots__ = ("_list", "_max_size", "_index")
-
+class MaxSizeList(MutableSequence[Any]):
     def __init__(self, max_size: int) -> None:
-        self._list: List[Any | None] = [None] * max_size
-        self._max_size: int = max_size
-        self._index: int = 0
+        self._max_size = max_size
+        self._list = []
 
     def push(self, item: Any) -> None:
-        self._list[self._index % len(self._list)] = item
-        self._index += 1
-
-    def get_list(self) -> List[Any]:
-        if self._index < self._max_size:
-            return self._list[: self._index]
-        return self._list[self._index % len(self._list) :] + self._list[: self._index % len(self._list)]
-
-    def __iter__(self) -> Iterable[Any]:
-        return iter(self.get_list())
-
-    def __len__(self) -> int:
-        return len(self.get_list())
+        if len(self) == self._max_size:
+            self._list.pop(0)
+        self._list.append(item)
 
     def __getitem__(self, index: int) -> Any:
-        return self.get_list()[index]
+        return self._list[index]
+
+    def __setitem__(self, index: int, value: Any) -> None:
+        self._list[index] = value
+
+    def __delitem__(self, index: int) -> None:
+        del self._list[index]
+
+    def __len__(self) -> int:
+        return len(self._list)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} max_size={self._max_size} list={self._list!r}>"
+
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self._list)
+
+    def insert(self, index: int, value: Any) -> None:
+        if len(self) == self._max_size:
+            self._list.pop(0)
+        self._list.insert(index, value)
 
 
 class CaseInsensitiveDict(MutableMapping[K, V]):
