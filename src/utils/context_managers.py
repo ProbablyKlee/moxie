@@ -51,6 +51,7 @@ class suppress(AbstractContextManager[None]):
     use The Single Return Law pattern. This is because static analysis tools will not
     be able to understand that code following the context is reachable.
     """
+
     def __init__(self, *exceptions: Type[BaseException], log: str, **kwargs: Any) -> None:
         self._exceptions = exceptions
         self._log = log
@@ -60,10 +61,10 @@ class suppress(AbstractContextManager[None]):
         return self
 
     def __exit__(
-            self,
-            exc_type: Optional[Type[BaseException]] = None,
-            exc_value: Optional[BaseException] = None,
-            traceback: Optional[TracebackType] = None
+        self,
+        exc_type: Optional[Type[BaseException]] = None,
+        exc_value: Optional[BaseException] = None,
+        traceback: Optional[TracebackType] = None,
     ) -> Optional[bool]:
         if captured := exc_type is not None and issubclass(exc_type, self._exceptions):
 

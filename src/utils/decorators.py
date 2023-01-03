@@ -48,11 +48,11 @@ __all__ = (
 
 def make_async(func: Callable[P, T]) -> Callable[P, Awaitable[T]]:
     """Decorator to wrap a function in a coroutine."""
+
     @functools.wraps(func)
     async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-        return await asyncio.get_event_loop().run_in_executor(
-            executor, functools.partial(func, *args, **kwargs)
-        )
+        return await asyncio.get_event_loop().run_in_executor(executor, functools.partial(func, *args, **kwargs))
+
     return wrapper
 
 

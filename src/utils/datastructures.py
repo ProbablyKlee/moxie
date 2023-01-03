@@ -41,10 +41,7 @@ P = ParamSpec('P')
 V = TypeVar("V")
 K = TypeVar("K", bound=str)
 
-__all__ = (
-    'MaxSizedList',
-    'CaseInsensitiveDict'
-)
+__all__ = ('MaxSizedList', 'CaseInsensitiveDict')
 
 
 class PartialCall(List[Any]):
@@ -52,8 +49,7 @@ class PartialCall(List[Any]):
         super().append(rhs)
 
     def call(self, *args: Tuple[Any, ...], **kwargs: Any) -> asyncio.Future[List[Any]]:
-        return asyncio.gather(
-            *(maybe_coroutine(func, *args, **kwargs) for func in self))
+        return asyncio.gather(*(maybe_coroutine(func, *args, **kwargs) for func in self))
 
 
 class MaxSizedList:
@@ -71,8 +67,8 @@ class MaxSizedList:
 
     def get_list(self) -> List[Any]:
         if self._index < self._max_size:
-            return self._list[:self._index]
-        return self._list[self._index % len(self._list):] + self._list[:self._index % len(self._list)]
+            return self._list[: self._index]
+        return self._list[self._index % len(self._list) :] + self._list[: self._index % len(self._list)]
 
     def __iter__(self) -> Iterable[Any]:
         return iter(self.get_list())
