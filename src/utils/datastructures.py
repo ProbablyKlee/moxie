@@ -29,7 +29,9 @@ from typing import (
     Iterable,
     Awaitable,
     TypeVar,
+    Iterator,
     ParamSpec,
+    Mapping,
     MutableMapping,
 )
 
@@ -81,6 +83,10 @@ class MaxSizedList:
 
 
 class CaseInsensitiveDict(MutableMapping[K, V]):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._dict = {}
+        self.update(dict(*args, **kwargs))
+
     def __contains__(self, k: K) -> bool:
         return super().__contains__(k.casefold())
 
@@ -93,8 +99,26 @@ class CaseInsensitiveDict(MutableMapping[K, V]):
     def __setitem__(self, k: K, v: V) -> None:
         super().__setitem__(k.casefold(), v)
 
+    def __iter__(self) -> Iterator[K]:
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def clear(self) -> None:
+        self._dict.clear()
+
+    def copy(self) -> "CaseInsensitiveDict[K, V]":
+        return CaseInsensitiveDict(self._dict)
+
     def get(self, k: K, default: Optional[V] = None) -> V | None:
         return super().get(k.casefold(), default)
 
     def pop(self, k: K, default: Optional[V] = None) -> V | None:
         return super().pop(k.casefold(), default)
+
+    def update(self, other: Mapping[K, V], **kwargs: Any) -> None:
+        for key, value in other.items():
+            self[key] = value
+        for key, value in kwargs.items():
+            self[key] = value
