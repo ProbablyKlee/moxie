@@ -23,18 +23,23 @@ import asyncio
 
 from typing import (
     List,
+    Tuple,
     Any,
-    Callable,
+    Optional,
     Iterable,
     Awaitable,
     TypeVar,
     ParamSpec,
+    MutableMapping,
 )
 
 from discord.utils import maybe_coroutine
 
 T = TypeVar('T')
 P = ParamSpec('P')
+
+V = TypeVar("V")
+K = TypeVar("K", bound=str)
 
 __all__ = (
     'MaxSizedList',
@@ -46,7 +51,7 @@ class PartialCall(List[Any]):
     def append(self, rhs: Awaitable[Any]) -> None:
         super().append(rhs)
 
-    def call(self, *args, **kwargs) -> asyncio.Future[List[Any]]:
+    def call(self, *args: Tuple[Any, ...], **kwargs: Any) -> asyncio.Future[List[Any]]:
         return asyncio.gather(
             *(maybe_coroutine(func, *args, **kwargs) for func in self))
 
@@ -79,21 +84,21 @@ class MaxSizedList:
         return self.get_list()[index]
 
 
-class CaseInsensitiveDict(dict):
-    def __contains__(self, k) -> bool:
+class CaseInsensitiveDict(MutableMapping[K, V]):
+    def __contains__(self, k: K) -> bool:
         return super().__contains__(k.casefold())
 
-    def __delitem__(self, k) -> None:
+    def __delitem__(self, k: K) -> None:
         return super().__delitem__(k.casefold())
 
-    def __getitem__(self, k) -> Any:
+    def __getitem__(self, k: K) -> V:
         return super().__getitem__(k.casefold())
 
-    def __setitem__(self, k, v) -> None:
+    def __setitem__(self, k: K, v: V) -> None:
         super().__setitem__(k.casefold(), v)
 
-    def get(self, k, default=None) -> Any:
+    def get(self, k: K, default: Optional[V] = None) -> V | None:
         return super().get(k.casefold(), default)
 
-    def pop(self, k, default=None) -> Any:
+    def pop(self, k: K, default: Optional[V] = None) -> V | None:
         return super().pop(k.casefold(), default)
