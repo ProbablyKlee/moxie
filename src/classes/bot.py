@@ -137,9 +137,7 @@ class RoboMoxie(commands.Bot):
 
     async def setup_extensions(self) -> None:
         exclude = '_', '.'
-        extensions = [
-            file for file in os.listdir('src/extensions') if not file.startswith(exclude)
-        ]
+        extensions = [file for file in os.listdir('src/extensions') if not file.startswith(exclude)]
         for extension in extensions:
             name = extension[:-3] if extension.endswith('.py') else extension
             try:
