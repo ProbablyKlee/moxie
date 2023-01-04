@@ -17,11 +17,11 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 -- DEALINGS IN THE SOFTWARE.
 --
-CREATE TABLE IF NOT EXISTS user
+CREATE TABLE IF NOT EXISTS users
 (
     user_id bigint NOT NULL,
-    emoji_server_id bigint NOT NULL
+    emoji_server_id bigint NOT NULL,
     CONSTRAINT user_pk PRIMARY KEY (user_id)
 );
 
-CREATE INDEX IF NOT EXISTS user_user_id_idx ON user (user_id);
+CREATE INDEX IF NOT EXISTS user_user_id_idx ON users (user_id);

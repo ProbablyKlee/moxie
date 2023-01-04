@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS guild
 (
     guild_id bigint NOT NULL,
     score_counting boolean NOT NULL DEFAULT true,
-    score_prefix text NOT NULL DEFAULT 'owo'
+    score_prefix text NOT NULL DEFAULT 'owo',
     CONSTRAINT guild_pk PRIMARY KEY (guild_id)
 );
 

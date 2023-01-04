@@ -48,10 +48,9 @@ from discord.ext import commands
 from twemoji_parser import emoji_to_url
 
 if TYPE_CHECKING:
-    from . import RoboMoxie
+    from . import RoboMoxie, MoxieEmbed
 
 from src.utils import make_async
-from src.classes import MoxieEmbed
 
 logger = logging.getLogger(__name__)
 embed_only_kwargs = [
@@ -67,7 +66,7 @@ embed_only_kwargs = [
 ]
 
 
-class Context(commands.Context[RoboMoxie]):
+class Context(commands.Context["RoboMoxie"]):
     """
     A subclass of :class:`discord.ext.commands.Context` with additional
     functionality.
