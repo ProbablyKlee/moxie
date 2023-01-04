@@ -23,7 +23,6 @@ import asyncio
 
 from typing import (
     List,
-    Tuple,
     Any,
     Optional,
     Awaitable,
@@ -38,15 +37,15 @@ from discord.utils import maybe_coroutine
 V = TypeVar("V")
 K = TypeVar("K", bound=str)
 
-__all__ = ('MaxSizeList', 'CaseInsensitiveDict')
+__all__ = ('MaxSizeList', 'InsensitiveMapping', 'PartialCall')
 
 
 class PartialCall(List[Any]):
     def append(self, rhs: Awaitable[Any]) -> None:
         super().append(rhs)
 
-    def call(self, *args: Tuple[Any, ...], **kwargs: Any) -> asyncio.Future[List[Any]]:
-        return asyncio.gather(*(maybe_coroutine(func, *args, **kwargs) for func in self))
+    def call(self, *args: Any, **kwargs: Any) -> asyncio.Future[List[Any]]:
+        return asyncio.gather(*(maybe_coroutine(func, *args, **kwargs) for func in self))  # type: ignore
 
 
 class MaxSizeList(MutableSequence[Any]):
@@ -83,7 +82,7 @@ class MaxSizeList(MutableSequence[Any]):
         self._list.insert(index, value)
 
 
-class CaseInsensitiveDict(MutableMapping[K, V]):
+class InsensitiveMapping(MutableMapping[K, V]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._dict: MutableMapping[str, V] = {}
         self.update(dict(*args, **kwargs))
@@ -109,8 +108,8 @@ class CaseInsensitiveDict(MutableMapping[K, V]):
     def clear(self) -> None:
         self._dict.clear()
 
-    def copy(self) -> "CaseInsensitiveDict[K, V]":
-        return CaseInsensitiveDict(self._dict)
+    def copy(self) -> "InsensitiveMapping[K, V]":
+        return InsensitiveMapping(self._dict)
 
     def get(self, k: K, default: Optional[V] = None) -> V | None:
         return super().get(k.casefold(), default)
@@ -122,4 +121,4 @@ class CaseInsensitiveDict(MutableMapping[K, V]):
         for key, value in other.items():
             self[key] = value
         for key, value in kwargs.items():
-            self[key] = value
+            self[key] = value  # type: ignore

@@ -30,7 +30,7 @@ class Logger:
     """A custom logger class for the bot."""
 
     @classmethod
-    def get_logger(cls, name):
+    def get_logger(cls, name: str):
         logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
 
@@ -66,3 +66,19 @@ class Logger:
         file_handler.setFormatter(file_formatter)
 
         return logger
+
+    @classmethod
+    def get_formatter(cls) -> logging.Formatter:
+        return colorlog.ColoredFormatter(
+            "%(asctime)s %(log_color)s%(levelname)-8s%(reset)s %(white)s%(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            log_colors={
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white",
+            },
+            secondary_log_colors={},
+            style="%",
+        )

@@ -19,3 +19,56 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
+
+import datetime
+
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+    Iterable,
+    Union,
+    Tuple,
+    Any,
+)
+
+from discord import utils, Embed, Color
+
+if TYPE_CHECKING:
+    from . import Context
+
+
+from src.constants import Colours
+
+
+class MoxieEmbed(Embed):
+    """A subclass of :class:`discord.Embed` with additional functionality."""
+
+    def __init__(
+        self,
+        colour: Optional[Union[Color, int]] = Colours.EMBED,
+        timestamp: Optional[datetime.datetime] = None,
+        fields: Optional[Iterable[Tuple[str, str, bool]]] = (),
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the embed with the given attributes."""
+        super().__init__(colour=colour, timestamp=timestamp, **kwargs)
+
+        if fields:
+            for name, value, inline in fields:
+                self.add_field(name=name, value=value, inline=inline)
+
+    @classmethod
+    def factory(cls, ctx: Context, **kwargs: Any) -> MoxieEmbed:
+        """Base factory method for creating an embed."""
+        instance = cls(timestamp=utils.utcnow(), **kwargs)
+        instance.set_footer(text=f"Invoked by {ctx.author}", icon_url=ctx.author.display_avatar.url)
+        return instance
+
+    @classmethod
+    def action(cls, title: str, gif: str, footer: str, **kwargs: Any) -> MoxieEmbed:
+        """Factory method for creating an embed for an action."""
+        instance = cls(title=title, **kwargs)
+        instance.set_image(url=gif)
+        instance.set_footer(text=footer)
+        return instance

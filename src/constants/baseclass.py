@@ -24,8 +24,10 @@ __all__ = ("CONSTANTS",)
 
 
 class ConstantsMeta(type):
+    """Metaclass for constants."""
+
     @staticmethod
-    def is_valid_constant(attr_name):
+    def is_valid_constant(attr_name: str) -> bool:
         return attr_name.isupper() and all(c.isalpha() or c == '_' for c in attr_name)
 
     def __new__(mcs, name, bases, attrs):
@@ -39,13 +41,13 @@ class ConstantsMeta(type):
 
         return super().__new__(mcs, name, bases, attrs)
 
-    def __setattr__(self, attr, nv):
+    def __setattr__(self, attr: str, value: object):
         raise RuntimeError(f"Cannot assign to attribute <{attr}> of Constant object.")
 
-    def __delattr__(self, attr):
+    def __delattr__(self, attr: str):
         raise RuntimeError(f"Cannot delete attribute <{attr}> of Constant object")
 
-    def __getitem__(self, attr):
+    def __getitem__(self, attr: str):
         if hasattr(self, attr):
             return getattr(self, attr)
         raise KeyError(f"<{attr}> is not a valid key for Constant object")
@@ -58,7 +60,7 @@ class ConstantsMeta(type):
     def __len__(self):
         return sum(1 for _ in self)
 
-    def __contains__(self, attr):
+    def __contains__(self, attr: str):
         return hasattr(self, attr)
 
 

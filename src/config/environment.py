@@ -21,7 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 from pydantic import BaseSettings
 
-__all__ = ("settings",)
+__all__ = ("Settings",)
 
 
 class Settings(BaseSettings):
@@ -34,9 +34,6 @@ class Settings(BaseSettings):
     HOST: str
     PORT: str
 
-    class Config:
+    class Config(BaseSettings.Config):
         env_file = ".env"
         env_file_encoding = "utf-8"
-
-
-settings = Settings()

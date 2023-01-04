@@ -36,7 +36,7 @@ class Colours(CONSTANTS):
 
 class RMoxie(CONSTANTS):
 
-    BOT_ID: int = 1054123882384212078
+    BOT_ID: int = 934418956159172690
     GUILD_ID: int = 802227019203084298
 
     @property
