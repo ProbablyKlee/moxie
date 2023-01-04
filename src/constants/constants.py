@@ -36,7 +36,6 @@ class Colours(CONSTANTS):
 
 class RMoxie(CONSTANTS):
 
-    BOT_ID: int = 934418956159172690
     GUILD_ID: int = 802227019203084298
 
     @property
@@ -46,13 +45,6 @@ class RMoxie(CONSTANTS):
     @property
     def avatar_url(self) -> str:
         return f"https://cdn.discordapp.com/attachments/1059817715583430667/1059825225451184228/rmoxie_av.png"
-
-    @property
-    def invite_url(self) -> str:
-        return (
-            f"https://discord.com/api/oauth2/authorize?"
-            f"client_id={self.BOT_ID}&permissions=8&scope=bot%20applications.commands"
-        )
 
     @property
     def guild_object(self) -> Snowflake:
