@@ -31,17 +31,18 @@ import datetime
 import itertools
 import collections
 
-from typing import Optional
+from typing import Optional, Self, Union
 
 import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
+from discord import Message, Interaction
 
 from src.config import Settings, Logger
 from src.utils import PartialCall, InsensitiveMapping
 
-from . import DatabaseConnector
+from . import DatabaseConnector, Context
 
 settings: Settings = Settings()  # type: ignore
 formatter = Logger.get_formatter()
@@ -81,6 +82,15 @@ class RoboMoxie(commands.Bot):
         self.cached_images: dict[str, io.BytesIO] = {}
         self.cached_prefixes: dict[int, list[str]] = {}
         self.cached_context: collections.deque[commands.Context["RoboMoxie"]] = collections.deque(maxlen=10)
+
+    async def get_context(
+        self,
+        origin: Union[Message, Interaction],
+        /,
+        *,
+        cls: type[Context] = Context,
+    ) -> Union[Context | commands.Context[Self], None]:
+        return await super().get_context(origin, cls=Context or cls)
 
     async def get_prefix(self, message: discord.Message, /) -> list[str]:
         # TODO: Implement guild object caching

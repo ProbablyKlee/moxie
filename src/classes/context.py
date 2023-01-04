@@ -74,7 +74,7 @@ class Context(commands.Context[RoboMoxie]):
     """
 
     message: discord.Message
-    channel: discord.abc.MessageableChannel
+    channel: discord.abc.Messageable
 
     @property
     def reference(self) -> discord.Message | Literal[False]:
