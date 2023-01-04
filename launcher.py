@@ -21,6 +21,9 @@ DEALINGS IN THE SOFTWARE.
 """
 import asyncio
 
+from src.classes.bot import starter
+from src.utils import suppress
 
 if __name__ == "__main__":
-    ...
+    with suppress(asyncio.CancelledError, KeyboardInterrupt, log="whatever {wotnot}", wotnot="I don't know"):
+        asyncio.run(starter())
