@@ -105,6 +105,62 @@ class RoboMoxie(commands.Bot):
 
         return await super().process_commands(message)
 
+    async def setup_hook(self) -> None:
+        try:
+            self.db: DatabaseConnector = DatabaseConnector(self)
+            self.db.pool = await asyncpg.create_pool(
+                user=settings.USER,
+                password=settings.PASSWORD,
+                database=settings.DATABASE,
+                host=settings.HOST,
+                port=settings.PORT,
+            )
+            self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+
+            await self.after_database_setup()
+
+        except Exception as exc:
+            self.logger.exception("An error occurred while setting up the bot.", exc_info=exc)
+        else:
+            self.logger.info("Successfully set up the bot.")
+
+    async def after_database_setup(self) -> None:
+        prerequisite = pathlib.Path(__file__).parent.parent.parent / 'schemas' / 'prerequisite'
+        essentials = pathlib.Path(__file__).parent.parent.parent / 'schemas' / 'essentials'
+        directories = itertools.chain(prerequisite.glob('*.sql'), essentials.glob('*.sql'))
+
+        for file in directories:
+            try:
+                await self.db.pool.execute(open(file, 'r').read())
+            except Exception as exc:
+                self.logger.exception("Failed to execute %s", file.name, exc_info=exc)
+
+    async def setup_extensions(self) -> None:
+        exclude = '_', '.'
+        extensions = [
+            file for file in os.listdir('src/extensions') if not file.startswith(exclude)
+        ]
+        for extension in extensions:
+            name = extension[:-3] if extension.endswith('.py') else extension
+            try:
+                await self.load_extension(f'source.extensions.{name}')
+                self.logger.info(f"[{name.upper()}] Loaded successfully.")
+
+            except Exception as exc:
+                self.logger.exception(msg=f"[{name.upper()}] Failed to load.", exc_info=exc)
+
+    async def on_ready(self) -> None:
+        self.logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
+
+    async def close(self) -> None:
+        await super().close()
+
+        if hasattr(self, 'session'):
+            await self.session.close()
+
+        if hasattr(self, 'db'):
+            await self.db.pool.close()
+
 
 moxie = RoboMoxie()
 moxie._BotBase__cogs = InsensitiveMapping()
