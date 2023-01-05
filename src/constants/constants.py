@@ -21,6 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 import regex
 
+from typing import Type
 from discord import Object
 from discord.abc import Snowflake
 
@@ -53,8 +54,8 @@ class RMoxie(CONSTANTS):
 
 class Regex(CONSTANTS):
 
-    EMOJI: regex.Pattern = regex.compile(r'((?<!<a?))?:(?P<name>\w+):(?(1)|(?!\d+>))')
-    MARKDOWN: regex.Pattern = regex.compile(r'(?<!`)(`+)(?!`)([\\s\\S]+?)(?<!`)\\1(?!`)')
+    EMOJI: Type[regex.Pattern] = regex.compile(r'((?<!<a?))?:(?P<name>\w+):(?(1)|(?!\d+>))')
+    MARKDOWN: Type[regex.Pattern] = regex.compile(r'(?<!`)(`+)(?!`)([\\s\\S]+?)(?<!`)\\1(?!`)')
 
 
 class Bots(CONSTANTS):

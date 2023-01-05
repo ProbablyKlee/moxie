@@ -31,7 +31,7 @@ import datetime
 import itertools
 import collections
 
-from typing import Optional, Self, Union, Dict, List
+from typing import Optional, Self, Union, Dict, List, Type
 
 import aiohttp
 import asyncpg
@@ -126,7 +126,7 @@ class RoboMoxie(commands.Bot):
                 return match.group(0)
 
         if message.guild.id in self.cached_prefixes:
-            regex = re.compile("|".join(map(re.escape, self.cached_prefixes[message.guild.id])), re.I)
+            regex: Type[re.Pattern] = re.compile("|".join(map(re.escape, self.cached_prefixes[message.guild.id])), re.I)
             if match := regex.match(message.content):
                 return match.group(0)
 
