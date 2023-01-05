@@ -21,22 +21,26 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
+import asyncio
 import io
 import os
 import re
 
 import pathlib
 import logging
+import difflib
 import datetime
 import itertools
+import functools
 import collections
 
-from typing import Optional, Self, Union, Dict, List, Type
+from asyncio import ensure_future
+from typing import Optional, Self, Union, Dict, List
 
 import aiohttp
 import asyncpg
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import Message, Interaction
 
 from src.models import Guild, User
@@ -86,6 +90,18 @@ class RoboMoxie(commands.Bot):
         self.cached_prefixes: Dict[int, List[str]] = {}
         self.cached_context: collections.deque[commands.Context["RoboMoxie"]] = collections.deque(maxlen=10)
 
+        # Private variables
+        self._is_day: bool = True
+
+    @tasks.loop(minutes=1)
+    async def update_time(self) -> None:
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        self._is_day = 23 >= now.hour >= 8
+
+    @functools.lru_cache(maxsize=256)
+    def get_close_matches(self, word: str, possibilities: List[str], /, *, cutoff: float = 0.6) -> Optional[List[str]]:
+        return difflib.get_close_matches(word, possibilities, cutoff=cutoff) or []
+
     async def get_context(
         self,
         origin: Union[Message, Interaction],
@@ -126,7 +142,7 @@ class RoboMoxie(commands.Bot):
                 return match.group(0)
 
         if message.guild.id in self.cached_prefixes:
-            regex: Type[re.Pattern] = re.compile("|".join(map(re.escape, self.cached_prefixes[message.guild.id])), re.I)
+            regex: re.Pattern[str] = re.compile("|".join(map(re.escape, self.cached_prefixes[message.guild.id])), re.I)
             if match := regex.match(message.content):
                 return match.group(0)
 
@@ -153,18 +169,24 @@ class RoboMoxie(commands.Bot):
             )
             self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
-            await self.after_database_setup()
-            await self.setup_extensions()
-
-            # Cache related
-            await self.fill_user_cache()
-            await self.fill_guild_cache()
-            await self.fill_prefix_cache()
+            self.call.append(
+                [
+                    ensure_future(self.after_database_setup()),
+                    ensure_future(self.setup_extensions()),
+                    ensure_future(self.setup_cache()),
+                    ensure_future(self.update_time.start()),
+                ]
+            )
 
         except Exception as exc:
             self.logger.exception("An error occurred while setting up the bot.", exc_info=exc)
         else:
             self.logger.info("Successfully set up the bot.")
+
+    async def setup_cache(self) -> None:
+        await self.fill_user_cache()
+        await self.fill_guild_cache()
+        await self.fill_prefix_cache()
 
     async def after_database_setup(self) -> None:
         prerequisite = pathlib.Path(__file__).parent.parent.parent / 'schemas' / 'prerequisite'
@@ -180,6 +202,8 @@ class RoboMoxie(commands.Bot):
     async def setup_extensions(self) -> None:
         exclude = '_', '.'
         extensions = [file for file in os.listdir('src/extensions') if not file.startswith(exclude)]
+
+        self.logger.info("Loading extensions...")
         for extension in extensions:
             name = extension[:-3] if extension.endswith('.py') else extension
             try:

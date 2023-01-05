@@ -19,11 +19,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+import re
 import logging
 import colorlog
 import logging.handlers
 
-__all__ = ("Logger",)
+__all__ = ("Logger", "LowercaseFilter")
+
+
+class LowercaseFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if re.search(r'[a-z]', record.getMessage()):
+            return False
+        return True
 
 
 class Logger:
