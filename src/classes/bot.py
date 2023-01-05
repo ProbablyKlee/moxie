@@ -126,7 +126,9 @@ class RoboMoxie(commands.Bot):
                 return match.group(0)
 
         if message.guild.id in self.cached_prefixes:
-            return self.cached_prefixes[message.guild.id]
+            regex = re.compile("|".join(map(re.escape, self.cached_prefixes[message.guild.id])), re.I)
+            if match := regex.match(message.content):
+                return match.group(0)
 
         return commands.when_mentioned(self, message)
 
