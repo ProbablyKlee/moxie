@@ -17,11 +17,30 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 -- DEALINGS IN THE SOFTWARE.
 --
-CREATE TABLE IF NOT EXISTS users
-(
-    user_id bigint NOT NULL,
-    emoji_server_id bigint NOT NULL DEFAULT 0,  -- 0 = no emoji server
-    CONSTRAINT user_pk PRIMARY KEY (user_id)
+CREATE TABLE IF NOT EXISTS prefix (
+    prefix_id bigserial NOT NULL,
+    guild_id bigint NOT NULL,
+    prefix text NOT NULL,
+    CONSTRAINT prefix_pk PRIMARY KEY (prefix_id),
+    CONSTRAINT prefix_guild_fk FOREIGN KEY (guild_id) REFERENCES guild (guild_id)
 );
 
-CREATE INDEX IF NOT EXISTS user_user_id_idx ON users (user_id);
+CREATE INDEX IF NOT EXISTS prefix_prefix_id_idx ON prefix (prefix_id);
+CREATE INDEX IF NOT EXISTS prefix_guild_id_idx ON prefix (guild_id);
+
+CREATE OR REPLACE FUNCTION insert_default_prefix()
+RETURNS TRIGGER AS
+$BODY$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM prefix WHERE guild_id = NEW.guild_id) THEN
+        INSERT INTO prefix (guild_id, prefix) VALUES (NEW.guild_id, 'fishie');
+    END IF;
+    RETURN NEW;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS insert_default_prefix_trigger ON guild;
+CREATE TRIGGER insert_default_prefix_trigger
+AFTER INSERT ON guild
+FOR EACH ROW EXECUTE PROCEDURE insert_default_prefix();

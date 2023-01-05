@@ -31,7 +31,7 @@ import datetime
 import itertools
 import collections
 
-from typing import Optional, Self, Union
+from typing import Optional, Self, Union, Dict, List
 
 import aiohttp
 import asyncpg
@@ -39,6 +39,7 @@ import discord
 from discord.ext import commands
 from discord import Message, Interaction
 
+from src.models import Guild, User
 from src.config import Settings, Logger
 from src.utils import PartialCall, InsensitiveMapping
 
@@ -79,8 +80,10 @@ class RoboMoxie(commands.Bot):
         self.db: Optional[DatabaseConnector] = None
 
         # Cache
-        self.cached_images: dict[str, io.BytesIO] = {}
-        self.cached_prefixes: dict[int, list[str]] = {}
+        self.cached_users: Dict[int, User] = {}
+        self.cached_guilds: Dict[int, Guild] = {}
+        self.cached_images: Dict[str, io.BytesIO] = {}
+        self.cached_prefixes: Dict[int, List[str]] = {}
         self.cached_context: collections.deque[commands.Context["RoboMoxie"]] = collections.deque(maxlen=10)
 
     async def get_context(
@@ -92,9 +95,40 @@ class RoboMoxie(commands.Bot):
     ) -> Union[Context | commands.Context[Self], None]:
         return await super().get_context(origin, cls=Context or cls)
 
-    async def get_prefix(self, message: discord.Message, /) -> list[str]:
-        # TODO: Implement guild object caching
-        return ["!", "?"]
+    async def fill_user_cache(self) -> None:
+        records = await self.db.fetch("SELECT * FROM users", simple=False)
+        for record in records:
+            if record["user_id"] in self.cached_users:
+                continue
+
+            user = User(record, self.db.pool)
+            self.cached_users[user.user_id] = user
+
+    async def fill_guild_cache(self) -> None:
+        records = await self.db.fetch("SELECT * FROM guild", simple=False)
+        for record in records:
+            if record["guild_id"] in self.cached_guilds:
+                continue
+
+            guild = Guild(record, self.db.pool)
+            self.cached_guilds[guild.guild_id] = guild
+
+    async def fill_prefix_cache(self) -> None:
+        records = await self.db.fetch("SELECT * FROM prefix", simple=False)
+        self.cached_prefixes = {
+            record["guild_id"]: [record["prefix"] for record in records if record["guild_id"] == record["guild_id"]]
+            for record in records
+        }
+
+    async def get_prefix(self, message: discord.Message, /) -> Union[str, List[str]]:
+        if not message.guild:
+            if match := re.match(re.escape("fishie"), message.content, re.I):
+                return match.group(0)
+
+        if message.guild.id in self.cached_prefixes:
+            return self.cached_prefixes[message.guild.id]
+
+        return commands.when_mentioned(self, message)
 
     async def process_commands(self, message: discord.Message, /) -> None:
 
@@ -118,6 +152,12 @@ class RoboMoxie(commands.Bot):
             self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
             await self.after_database_setup()
+            await self.setup_extensions()
+
+            # Cache related
+            await self.fill_user_cache()
+            await self.fill_guild_cache()
+            await self.fill_prefix_cache()
 
         except Exception as exc:
             self.logger.exception("An error occurred while setting up the bot.", exc_info=exc)
