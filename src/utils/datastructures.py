@@ -109,6 +109,7 @@ class InsensitiveMapping(MutableMapping[K, V]):
         self._dict.clear()
 
     def copy(self) -> "InsensitiveMapping[K, V]":
+        """Return a shallow copy of this mapping."""
         return InsensitiveMapping(self._dict)
 
     def get(self, k: K, default: Optional[V] = None) -> V | None:

@@ -193,13 +193,13 @@ class RoboMoxie(commands.Bot):
         self.logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
 
     async def close(self) -> None:
-        await super().close()
-
         if hasattr(self, 'session'):
             await self.session.close()
 
         if hasattr(self, 'db'):
             await self.db.pool.close()
+
+        return await super().close()
 
 
 moxie = RoboMoxie()
