@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     user_id bigint NOT NULL,
     emoji_server_id bigint NOT NULL DEFAULT 0,  -- 0 = no emoji server
+    added_at timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT user_pk PRIMARY KEY (user_id)
 );
 
