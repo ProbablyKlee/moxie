@@ -161,9 +161,9 @@ class RoboMoxie(commands.Bot):
         try:
             self.db: DatabaseConnector = DatabaseConnector(self)
             self.db.pool = await asyncpg.create_pool(
-                user=settings.USER,
-                password=settings.PASSWORD,
-                database=settings.DATABASE,
+                user=settings.POSTGRES_USER,
+                password=settings.POSTGRES_PASSWORD,
+                database=settings.POSTGRES_DB,
                 host=settings.HOST,
                 port=settings.PORT,
             )

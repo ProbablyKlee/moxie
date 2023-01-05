@@ -28,11 +28,26 @@ class Settings(BaseSettings):
     """Settings for the bot."""
 
     TOKEN: str
-    USER: str
-    PASSWORD: str
-    DATABASE: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
     HOST: str
-    PORT: str
+    PORT: int = 6000
+
+    REDIS_HOST: str
+    REDIS_PORT: int = 6001
+    REDIS_DB: int = 0
+
+    DOCKER_INFLUXDB_INIT_MODE: str = "setup"
+    INFLUXDB_GRAPHITE_ENABLED: int = 1
+    DOCKER_INFLUXDB_INIT_USERNAME: str
+    DOCKER_INFLUXDB_INIT_PASSWORD: str
+    DOCKER_INFLUXDB_INIT_ORG: str
+    DOCKER_INFLUXDB_INIT_BUCKET: str
+    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: str
+
+    GF_SECURITY_ADMIN_USER: str
+    GF_SECURITY_ADMIN_PASSWORD: str
 
     class Config(BaseSettings.Config):
         env_file = ".env"
