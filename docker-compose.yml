@@ -1,0 +1,57 @@
+version: "3.9"
+
+
+services:
+  db:
+    image: postgres
+    env_file: .env
+    restart: always
+    volumes:
+      - data_postgres:/var/lib/postgresql/data
+    networks:
+      - moxie
+    ports:
+      - 6000:5432
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - moxie
+    ports:
+      - 6001:6379
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    # user: "472"
+    env_file: .env
+    volumes:
+      - "grafana_lib:/var/lib/grafana"
+      - "grafana_etc:/etc/grafana"
+    ports:
+      - 6002:3000
+    networks:
+      - moxie
+
+  influxdb:
+    image: influxdb:latest
+    restart: always
+    env_file: .env
+    ports:
+      - 6003:8086
+    volumes:
+      - "influxdb_lib:/var/lib/influxdb2"
+      - "influxdb_etc:/etc/influxdb2"
+    networks:
+        - moxie
+
+networks:
+  moxie:
+
+volumes:
+  data_postgres:
+  grafana_lib:
+  grafana_etc:
+  influxdb_lib:
+  influxdb_etc:
