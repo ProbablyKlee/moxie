@@ -21,6 +21,8 @@ DEALINGS IN THE SOFTWARE.
 """
 import re
 import math
+import operator
+
 from collections import namedtuple
 from typing import Any, List, Union
 
@@ -58,7 +60,7 @@ class Calculator:
         return token_values
 
     @staticmethod
-    def _shunting_yard(tokens: List[Union[str, Any]]) -> List[str]:
+    def _parse_expression(tokens: List[Union[str, Any]]) -> List[str]:
         queue, stack = [], []
         for (
             token,
@@ -101,11 +103,11 @@ class Calculator:
             return float(tokens[0])
 
         ops = {
-            '+': lambda a, b: a + b,
-            '-': lambda a, b: a - b,
-            '*': lambda a, b: a * b,
-            '/': lambda a, b: a / b,
-            '^': lambda a, b: a**b,
+            '+': operator.add,
+            '-': operator.sub,
+            '*': operator.mul,
+            '/': operator.truediv,
+            '^': operator.pow,
         }
 
         for token in tokens:
@@ -124,7 +126,7 @@ class Calculator:
 
     def calculate(self) -> Union[float, int]:
         tokens = self._tokenize()
-        rpn = self._shunting_yard(tokens)
+        rpn = self._parse_expression(tokens)
         result = self._evaluate_rpn(rpn)
 
         if result.is_integer():
