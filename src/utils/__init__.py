@@ -23,3 +23,4 @@ from .context_managers import *
 from .datastructures import *
 from .decorators import *
 from .converter import *
+from .math import *
