@@ -92,7 +92,9 @@ class RoboMoxie(commands.Bot):
 
         # redis connection
         self.redis: Redis = cast(Callable[..., Redis], from_url)(
-            f"redis://{Settings.REDIS_HOST}:{Settings.REDIS_PORT}/{Settings.REDIS_DB}", encoding="utf-8", decode_responses=True
+            f"redis://{Settings.REDIS_HOST}:{Settings.REDIS_PORT}/{Settings.REDIS_DB}",
+            encoding="utf-8",
+            decode_responses=True,
         )
 
         # Private variables
