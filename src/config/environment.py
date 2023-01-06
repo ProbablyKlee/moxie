@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     DOCKER_INFLUXDB_INIT_BUCKET: str
     DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: str
 
+    OWNER_IDS: str
+
     class Config(BaseSettings.Config):
         env_file = ".env"
         env_file_encoding = "utf-8"

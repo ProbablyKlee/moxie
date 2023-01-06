@@ -21,7 +21,6 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
-import asyncio
 import io
 import os
 import re
@@ -34,8 +33,9 @@ import itertools
 import functools
 import collections
 
+from aioredis import Redis, from_url
 from asyncio import ensure_future
-from typing import Optional, Self, Union, Dict, List
+from typing import Callable, Optional, Self, Union, Dict, List, cast
 
 import aiohttp
 import asyncpg
@@ -67,7 +67,7 @@ class RoboMoxie(commands.Bot):
             message_content=True,
         )
         super().__init__(
-            self.get_prefix, intents=intents, case_insensitive=True, owner_ids=[852419718819348510, 852419718819348510]
+            self.get_prefix, intents=intents, case_insensitive=True, owner_ids=list(map(int, Settings.OWNER_IDS.split(" ")))
         )
         self.call: PartialCall = PartialCall()
         self.settings: Settings = settings
@@ -89,6 +89,11 @@ class RoboMoxie(commands.Bot):
         self.cached_images: Dict[str, io.BytesIO] = {}
         self.cached_prefixes: Dict[int, List[str]] = {}
         self.cached_context: collections.deque[commands.Context["RoboMoxie"]] = collections.deque(maxlen=10)
+
+        # redis connection
+        self.redis: Redis = cast(Callable[..., Redis], from_url)(
+            f"redis://{Settings.REDIS_HOST}:{Settings.REDIS_PORT}/{Settings.REDIS_DB}", encoding="utf-8", decode_responses=True
+        )
 
         # Private variables
         self._is_day: bool = True
