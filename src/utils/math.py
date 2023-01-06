@@ -41,7 +41,6 @@ _num, _lparen, _rparen = 'NUMBER', '(', ')'
 
 
 class Calculator:
-
     def __init__(self, expression: str):
         self.expression = expression
 
@@ -134,13 +133,12 @@ class Calculator:
 
 
 class Cube:
-
     def __init__(self, size: int):
         self.size = size
 
     def get_grid_size(self) -> int:
         for i in range(1, self.size):
-            if (i - 1) ** 2 < self.size <= i ** 2:
+            if (i - 1) ** 2 < self.size <= i**2:
                 return i
 
         return 2  # shouldn't happen
