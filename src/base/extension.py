@@ -19,55 +19,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import regex
+from __future__ import annotations
 
-from typing import Type
-from discord import Object
-from discord.abc import Snowflake
+from typing import TYPE_CHECKING
+from discord.ext import commands
+from src.constants import Extension
 
-from .baseclass import CONSTANTS
+if TYPE_CHECKING:
+    from src.classes import RoboMoxie
 
-__all__ = ('Colours', 'RMoxie', 'Extension', 'Regex', 'Bots', 'Emojis')
-
-
-class Colours(CONSTANTS):
-
-    EMBED: int = 0xFFCCB4
+__all__ = ("BaseExtension", "BaseEventExtension")
 
 
-class RMoxie(CONSTANTS):
+class BaseExtension(commands.Cog):
+    """Base class for all extensions."""
 
-    GUILD_ID: int = 802227019203084298
+    def __init__(self, bot: RoboMoxie) -> None:
+        self.bot = bot
 
-    @property
-    def thumb_url(self) -> str:
-        return self.avatar_url  # maybe change this later
+
+class BaseEventExtension(BaseExtension):
+    """Base class for all event extensions."""
 
     @property
-    def avatar_url(self) -> str:
-        return f"https://cdn.discordapp.com/attachments/1059817715583430667/1059825225451184228/rmoxie_av.png"
-
-    @property
-    def guild_object(self) -> Snowflake:
-        return Object(id=self.GUILD_ID)
-
-
-class Regex(CONSTANTS):
-
-    EMOJI: Type[regex.Pattern] = regex.compile(r'((?<!<a?))?:(?P<name>\w+):(?(1)|(?!\d+>))')
-    MARKDOWN: Type[regex.Pattern] = regex.compile(r'(?<!`)(`+)(?!`)([\\s\\S]+?)(?<!`)\\1(?!`)')
-
-
-class Bots(CONSTANTS):
-
-    OWO: int = 408785106942164992
-
-
-class Emojis(CONSTANTS):
-
-    STOP: str = "<:please_stop:1057473529437765653>"
-
-
-class Extension(CONSTANTS):
-
-    EVENT: str = "<:nyarch:1045798019628544131>"
+    def emoji(self) -> str:
+        return Extension.EVENT

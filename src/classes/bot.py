@@ -34,7 +34,7 @@ import functools
 import collections
 
 from asyncio import ensure_future
-from typing import Callable, Optional, Self, Union, Dict, List, cast
+from typing import Optional, Self, Union, Dict, List
 
 import aiohttp
 import asyncpg
