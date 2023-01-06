@@ -66,16 +66,13 @@ class Calculator:
     @staticmethod
     def _parse_expression(tokens: List[Union[str, Any]]) -> List[str]:
         queue, stack = [], []
-        for (
-            token,
-            value,
-        ) in tokens:
+        for token, value in tokens:
             if token is _num:
                 queue.append(value)
             elif token in _ops:
-                t1, (p1, a1) = token, value
+                t1, p1, a1 = token, _ops[token].precedence, _ops[token].associativity
                 while stack:
-                    t2, (p2, a2) = stack[-1]
+                    t2, p2, a2 = stack[-1]
                     if (a1 == _l and p1 <= p2) or (a1 == _r and p1 < p2):
                         if t1 != _rparen:
                             if t2 != _lparen:
@@ -93,9 +90,9 @@ class Calculator:
                     else:
                         break
                 if t1 != _rparen:
-                    stack.append((t1, value))
+                    stack.append((t1, p1, a1))
         while stack:
-            t2, (_, _) = stack[-1]
+            t2, _, _ = stack[-1]
             stack.pop()
             queue.append(t2)
         return queue
