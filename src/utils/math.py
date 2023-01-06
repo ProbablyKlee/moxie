@@ -23,21 +23,25 @@ import re
 import math
 import operator
 
-from collections import namedtuple
-from typing import Any, List, Union
+from typing import Any, List, Union, NamedTuple
 
 __all__ = ("Calculator", "Cube")
 
-_operator_info = namedtuple('OpInfo', 'precedence associativity')
+
+class OperatorInfo(NamedTuple):
+    precedence: int
+    associativity: str
+
+
 _l, _r = 'left', 'right'
 _ops = {
-    '^': _operator_info(precedence=4, associativity=_r),
-    '*': _operator_info(precedence=3, associativity=_l),
-    '/': _operator_info(precedence=3, associativity=_l),
-    '+': _operator_info(precedence=2, associativity=_l),
-    '-': _operator_info(precedence=2, associativity=_l),
-    '(': _operator_info(precedence=9, associativity=_l),
-    ')': _operator_info(precedence=0, associativity=_l),
+    '(': OperatorInfo(precedence=9, associativity=_l),
+    '^': OperatorInfo(precedence=4, associativity=_r),
+    '*': OperatorInfo(precedence=3, associativity=_l),
+    '/': OperatorInfo(precedence=3, associativity=_l),
+    '+': OperatorInfo(precedence=2, associativity=_l),
+    '-': OperatorInfo(precedence=2, associativity=_l),
+    ')': OperatorInfo(precedence=0, associativity=_l),
 }
 _num, _lparen, _rparen = 'NUMBER', '(', ')'
 
@@ -132,6 +136,9 @@ class Calculator:
         if result.is_integer():
             return int(result)
         return result
+
+    def __repr__(self) -> str:
+        return str(self.calculate())
 
 
 class Cube:
