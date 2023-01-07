@@ -83,7 +83,6 @@ class MaxSizeList(MutableSequence[Any]):
 
 
 class InsensitiveMapping(dict):
-
     def __contains__(self, k: K) -> bool:
         return super().__contains__(k.casefold())
 

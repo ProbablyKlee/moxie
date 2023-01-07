@@ -72,11 +72,7 @@ class BackendEventHandler(BaseEventExtension):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
-        if (
-            member.bot
-            or member.guild.chunked
-            or len(member.mutual_guilds) > 1
-        ):
+        if member.bot or member.guild.chunked or len(member.mutual_guilds) > 1:
             return
 
         await User.create_or_update(member.id, self.bot.pool)
