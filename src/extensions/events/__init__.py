@@ -30,7 +30,7 @@ from .backend import BackendEventHandler
 extensions = BackendEventHandler
 
 
-class Event(BackendEventHandler):
+class Event(extensions):
     """Base class for all events."""
 
 
