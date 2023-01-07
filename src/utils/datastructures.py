@@ -44,7 +44,7 @@ class PartialCall(List[Any]):
     def append(self, *rhs: List[asyncio.Task[Any]]) -> None:
         super().append(*rhs)
 
-    def call(self, *args: Any, **kwargs: Any) -> asyncio.Future[List[Any]]:
+    def call(self, *args: Any, **kwargs: Any) -> asyncio.Future[List[Awaitable[Any]]]:
         return asyncio.gather(*(maybe_coroutine(func, *args, **kwargs) for func in self))
 
 

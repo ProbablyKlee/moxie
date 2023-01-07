@@ -26,9 +26,9 @@ from discord.ext import commands
 from src.constants import Extension
 
 if TYPE_CHECKING:
-    from src.classes import RoboMoxie
+    from src.classes import RoboMoxie, Context
 
-__all__ = ("BaseExtension", "BaseEventExtension")
+__all__ = ("BaseCommandExtension", "BaseEventExtension")
 
 
 class BaseExtension(commands.Cog):
@@ -44,3 +44,14 @@ class BaseEventExtension(BaseExtension):
     @property
     def emoji(self) -> str:
         return Extension.EVENT
+
+
+class BaseCommandExtension(BaseExtension):
+    """Base class for all command extensions."""
+
+    @property
+    def emoji(self) -> str:
+        raise NotImplementedError
+
+    async def cog_check(self, ctx: Context[RoboMoxie]) -> bool:
+        raise NotImplementedError
