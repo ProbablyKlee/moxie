@@ -39,9 +39,7 @@ class Guild:
         self.score_prefix = record["score_prefix"]
 
     @classmethod
-    async def create_or_update(
-        cls, guild_id: int, score_counting: bool, score_prefix: str, bot: RoboMoxie
-    ) -> None:
+    async def create_or_update(cls, guild_id: int, score_counting: bool, score_prefix: str, bot: RoboMoxie) -> None:
         await bot.db.fetch(
             """
             INSERT INTO guild (guild_id, score_counting, score_prefix)

@@ -65,9 +65,7 @@ class User:
         await bot.db.execute("SELECT insert_history_item($1, $2, $3);", user.id, user_type, entry_type)
 
     @classmethod
-    async def insert_avatar_history_item(
-        cls, user: discord.Member, p_format: str, avatar: bytes, bot: RoboMoxie
-    ) -> None:
+    async def insert_avatar_history_item(cls, user: discord.Member, p_format: str, avatar: bytes, bot: RoboMoxie) -> None:
         await bot.db.execute("SELECT insert_avatar_history_item($1, $2, $3, $4);", user.id, p_format, avatar)
 
     async def fetch_history(self, user_type: str) -> list[dict[str, ...]]:
