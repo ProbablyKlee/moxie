@@ -66,7 +66,7 @@ class RoboMoxie(commands.Bot):
             message_content=True,
         )
         super().__init__(
-            self.get_prefix, intents=intents, case_insensitive=True, owner_ids=list(map(int, Settings.OWNER_IDS.split(" ")))
+            self.get_prefix, intents=intents, case_insensitive=True, owner_ids=list(map(int, settings.OWNER_IDS.split(" ")))
         )
         self.call: PartialCall = PartialCall()
         self.settings: Settings = settings
@@ -206,7 +206,7 @@ class RoboMoxie(commands.Bot):
         for extension in extensions:
             name = extension[:-3] if extension.endswith('.py') else extension
             try:
-                await self.load_extension(f'source.extensions.{name}')
+                await self.load_extension(f'src.extensions.{name}')
                 self.logger.info(f"[{name.upper()}] Loaded successfully.")
 
             except Exception as exc:

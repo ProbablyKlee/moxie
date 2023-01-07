@@ -19,3 +19,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.classes import RoboMoxie
+
+from .backend import BackendEventHandler
+
+extensions = BackendEventHandler
+
+
+class Event(BackendEventHandler):
+    """Base class for all events."""
+
+
+async def setup(bot: RoboMoxie) -> None:
+    await bot.add_cog(extensions(bot))
