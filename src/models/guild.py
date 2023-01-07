@@ -20,26 +20,29 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
-from typing import Sequence, List
+from typing import Sequence, List, TYPE_CHECKING
 
 import asyncpg
 import discord
+
+if TYPE_CHECKING:
+    from src.classes import RoboMoxie
 
 
 class Guild:
     """Represents a guild in the database."""
 
-    def __init__(self, record: asyncpg.Record, pool: asyncpg.pool.Pool):
-        self.pool = pool
+    def __init__(self, record: asyncpg.Record, bot: RoboMoxie):
+        self.pool = bot.pool
         self.guild_id = record["guild_id"]
         self.score_counting = record["score_counting"]
         self.score_prefix = record["score_prefix"]
 
     @classmethod
     async def create_or_update(
-        cls, guild_id: int, score_counting: bool, score_prefix: str, pool: asyncpg.pool.Pool
-    ) -> Guild:
-        record = await pool.fetchrow(
+        cls, guild_id: int, score_counting: bool, score_prefix: str, bot: RoboMoxie
+    ) -> None:
+        await bot.db.fetch(
             """
             INSERT INTO guild (guild_id, score_counting, score_prefix)
             VALUES ($1, $2, $3)
@@ -50,11 +53,10 @@ class Guild:
             score_counting,
             score_prefix,
         )
-        return cls(record, pool)
 
     @classmethod
-    async def insert_many(cls, guilds: Sequence[discord.Guild], pool: asyncpg.pool.Pool) -> None:
-        return await pool.executemany(
+    async def insert_many(cls, guilds: Sequence[discord.Guild], bot: RoboMoxie) -> None:
+        return await bot.db.execute_many(
             """
             INSERT INTO guild (guild_id)
             VALUES ($1)

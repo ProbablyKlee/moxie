@@ -116,7 +116,7 @@ class RoboMoxie(commands.Bot):
             if record["user_id"] in self.cached_users:
                 continue
 
-            user = User(record, self.db.pool)
+            user = User(record, self)
             self.cached_users[user.user_id] = user
 
     async def fill_guild_cache(self) -> None:
@@ -125,7 +125,7 @@ class RoboMoxie(commands.Bot):
             if record["guild_id"] in self.cached_guilds:
                 continue
 
-            guild = Guild(record, self.db.pool)
+            guild = Guild(record, self)
             self.cached_guilds[guild.guild_id] = guild
 
     async def fill_prefix_cache(self) -> None:

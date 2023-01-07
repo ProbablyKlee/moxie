@@ -40,13 +40,17 @@ class BackendEventHandler(BaseEventExtension):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         members = await guild.chunk(cache=True) if not guild.chunked else guild.members
-        await Guild.create_or_update(guild.id, True, 'owo', self.bot.pool)
+        await Guild.create_or_update(guild.id, True, 'owo', self.bot)
 
         for_execution = []
         avatar_images = []
         avatar_bytes = []
         for m in members:
-            if len(m.mutual_guilds) > 1 or m.bot:
+            try:
+                if len(m.mutual_guilds) > 1 or m.bot:
+                    continue
+            except AttributeError:
+                self.bot.logger.debug(f"Member {m} from guild {guild} was skipped due to AttributeError.")
                 continue
             try:
                 avatar = await m.display_avatar.read()
@@ -57,10 +61,10 @@ class BackendEventHandler(BaseEventExtension):
             avatar_images.append((m.id, "url", m.avatar.url))
             avatar_bytes.append((m.id, imghdr.what(None, avatar), avatar))
 
-        await User.insert_many(for_execution, self.bot.pool)
+        await User.insert_many(for_execution, self.bot)
 
-        image_query = "SELECT insert_history_item($1, $2, $3"
-        avatar_query = "SELECT insert_avatar_history_item($1, $2, $3, $4);"
+        image_query = "SELECT insert_history_item($1, $2, $3);"
+        avatar_query = "SELECT insert_avatar_history_item($1, $2, $3);"
 
         await self.bot.db.execute_many(image_query, avatar_images)
         await self.bot.db.execute_many(avatar_query, avatar_bytes)
@@ -70,7 +74,7 @@ class BackendEventHandler(BaseEventExtension):
         if member.bot or member.guild.chunked or len(member.mutual_guilds) > 1:
             return
 
-        await User.insert_maybe_user(member.id, self.bot.pool)
+        await User.insert_maybe_user(member.id, self.bot)
 
     @commands.Cog.listener()
     async def on_user_update(self, before: discord.Member, after: discord.Member) -> None:
@@ -78,7 +82,7 @@ class BackendEventHandler(BaseEventExtension):
             return  # No more stealing my precious storage space
 
         if before.name != after.name:
-            await User.insert_history_item(after, "name", after.name, self.bot.pool)
+            await User.insert_history_item(after, "name", after.name, self.bot)
             self.bot.logger.debug(f"User {before!r} changed their name to {after!r}")
 
         if before.avatar != after.avatar:
@@ -86,7 +90,7 @@ class BackendEventHandler(BaseEventExtension):
             self.bot.logger.debug(f"User {before!r} changed their avatar")
 
         if before.discriminator != after.discriminator:
-            await User.insert_history_item(after, "discriminator", after.discriminator, self.bot.pool)
+            await User.insert_history_item(after, "discriminator", after.discriminator, self.bot)
             self.bot.logger.debug(f"User {before!r} changed their discriminator")
 
     @commands.Cog.listener()

@@ -47,9 +47,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE SEQUENCE IF NOT EXISTS user_history_id_seq;
+DROP TABLE IF EXISTS avatar_history;
 CREATE TABLE IF NOT EXISTS avatar_history (
    user_id bigint not null,
-   avatar_id serial not null,
+   avatar_id bigint not null default nextval('user_history_id_seq'),
    format text not null,
    avatar bytea not null,
    added_at timestamp with time zone not null default now(),
