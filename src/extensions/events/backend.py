@@ -70,7 +70,7 @@ class BackendEventHandler(BaseEventExtension):
         if member.bot or member.guild.chunked or len(member.mutual_guilds) > 1:
             return
 
-        await User.create_or_update(member.id, self.bot.pool)
+        await User.insert_maybe_user(member.id, self.bot.pool)
 
     @commands.Cog.listener()
     async def on_user_update(self, before: discord.Member, after: discord.Member) -> None:

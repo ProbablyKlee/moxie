@@ -35,16 +35,14 @@ class User:
         self.emoji_server_id = record["emoji_server_id"]
 
     @classmethod
-    async def create_or_update(cls, user_id: int, emoji_server_id: int, pool: asyncpg.pool.Pool) -> User:
+    async def insert_maybe_user(cls, user_id: int, pool: asyncpg.pool.Pool) -> User:
         record = await pool.fetchrow(
             """
-            INSERT INTO users (user_id, emoji_server_id)
-            VALUES ($1, $2)
-            ON CONFLICT (user_id) DO UPDATE SET emoji_server_id = $2
-            RETURNING *;
+            INSERT INTO users (user_id)
+            VALUES ($1)
+            ON CONFLICT (user_id) DO NOTHING;
             """,
             user_id,
-            emoji_server_id,
         )
         return cls(record, pool)
 
