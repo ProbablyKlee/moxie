@@ -58,3 +58,36 @@ class User:
             """,
             ((u.id,) for u in users),
         )
+
+    @classmethod
+    async def insert_history_item(
+            cls, user: discord.Member, user_type: str, entry_type: str, pool: asyncpg.Pool) -> None:
+        await pool.execute("SELECT insert_history_item($1, $2, $3);", user.id, user_type, entry_type)
+
+    @classmethod
+    async def insert_avatar_history_item(
+            cls, user: discord.Member, p_format: str, avatar: bytes, pool: asyncpg.Pool) -> None:
+        await pool.execute(
+            "SELECT insert_avatar_history_item($1, $2, $3, $4);", user.id, p_format, avatar
+        )
+
+    async def fetch_history(self, user_type: str) -> asyncpg.Record:
+        return await self.pool.fetchrow(
+            """
+            SELECT * FROM user_history
+            WHERE user_id = $1 AND user_type = $2
+            ORDER BY added_at DESC
+            """,
+            self.user_id,
+            user_type,
+        )
+
+    async def fetch_avatar_history(self) -> asyncpg.Record:
+        return await self.pool.fetchrow(
+            """
+            SELECT * FROM avatar_history
+            WHERE user_id = $1
+            ORDER BY added_at DESC
+            """,
+            self.user_id,
+        )

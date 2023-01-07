@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS user_history (
 CREATE INDEX IF NOT EXISTS user_history_user_id_idx ON user_history (user_id);
 CREATE INDEX IF NOT EXISTS user_history_user_type_idx ON user_history (user_type);
 
-DROP FUNCTION IF EXISTS insert_history_item();
 CREATE OR REPLACE FUNCTION insert_history_item(p_user_id bigint, p_user_type text, p_entry_type text)
 RETURNS void AS $$
 BEGIN
@@ -50,7 +49,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS avatar_history (
    user_id bigint not null,
-   avatar_id uuid not null,
+   avatar_id serial not null,
    format text not null,
    avatar bytea not null,
    added_at timestamp with time zone not null default now(),
@@ -61,7 +60,7 @@ CREATE TABLE IF NOT EXISTS avatar_history (
 
 CREATE INDEX IF NOT EXISTS avatar_history_user_id_idx ON avatar_history (user_id);
 
-CREATE OR REPLACE FUNCTION insert_avatar_history_item(p_user_id bigint, p_avatar_id uuid, p_format text, p_avatar bytea)
+CREATE OR REPLACE FUNCTION insert_avatar_history_item(p_user_id bigint, p_format text, p_avatar bytea)
 RETURNS void AS $$
 BEGIN
     IF NOT EXISTS (
@@ -71,7 +70,7 @@ BEGIN
         )
         SELECT 1 FROM last_avatar WHERE avatar = p_avatar
     ) THEN
-        INSERT INTO avatar_history (user_id, avatar_id, format, avatar) VALUES (p_user_id, p_avatar_id, p_format, p_avatar);
+        INSERT INTO avatar_history (user_id, format, avatar) VALUES (p_user_id, p_format, p_avatar);
     END IF;
 END;
 $$ LANGUAGE plpgsql;
