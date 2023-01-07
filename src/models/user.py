@@ -60,16 +60,14 @@ class User:
         )
 
     @classmethod
-    async def insert_history_item(
-            cls, user: discord.Member, user_type: str, entry_type: str, pool: asyncpg.Pool) -> None:
+    async def insert_history_item(cls, user: discord.Member, user_type: str, entry_type: str, pool: asyncpg.Pool) -> None:
         await pool.execute("SELECT insert_history_item($1, $2, $3);", user.id, user_type, entry_type)
 
     @classmethod
     async def insert_avatar_history_item(
-            cls, user: discord.Member, p_format: str, avatar: bytes, pool: asyncpg.Pool) -> None:
-        await pool.execute(
-            "SELECT insert_avatar_history_item($1, $2, $3, $4);", user.id, p_format, avatar
-        )
+        cls, user: discord.Member, p_format: str, avatar: bytes, pool: asyncpg.Pool
+    ) -> None:
+        await pool.execute("SELECT insert_avatar_history_item($1, $2, $3, $4);", user.id, p_format, avatar)
 
     async def fetch_history(self, user_type: str) -> asyncpg.Record:
         return await self.pool.fetchrow(
