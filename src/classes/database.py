@@ -68,7 +68,7 @@ class DatabaseConnector:
             simple=False,
         ):
             table_name: str = f"{record['table_catalog']}.{record['table_schema']}.{record['table_name']}"
-            tables[table_name][record['column_name']] = record['data_type'].upper() + (
+            tables[table_name][record['column_name']] = record['data_type'].upper() + (  # type: ignore
                 ' NOT NULL' if record['is_nullable'] == 'NO' else ''
             )
 

@@ -33,55 +33,53 @@ class OperatorInfo(NamedTuple):
     associativity: str
 
 
-_l, _r = 'left', 'right'
-_ops = {
-    '(': OperatorInfo(precedence=9, associativity=_l),
-    '^': OperatorInfo(precedence=4, associativity=_r),
-    '*': OperatorInfo(precedence=3, associativity=_l),
-    '/': OperatorInfo(precedence=3, associativity=_l),
-    '+': OperatorInfo(precedence=2, associativity=_l),
-    '-': OperatorInfo(precedence=2, associativity=_l),
-    ')': OperatorInfo(precedence=0, associativity=_l),
-}
-_num, _lparen, _rparen = 'NUMBER', '(', ')'
-
-
 class Calculator:
-    def __init__(self, expression: str):
+    _ops = {
+        '(': OperatorInfo(precedence=9, associativity='left'),
+        '^': OperatorInfo(precedence=4, associativity='right'),
+        '*': OperatorInfo(precedence=3, associativity='left'),
+        '/': OperatorInfo(precedence=3, associativity='left'),
+        '+': OperatorInfo(precedence=2, associativity='left'),
+        '-': OperatorInfo(precedence=2, associativity='left'),
+        ')': OperatorInfo(precedence=0, associativity='left'),
+    }
+
+    def __init__(self, expression: str) -> None:
         self.expression = expression
 
-    def _tokenize(self) -> List[Union[str, Any]]:
-        symbols = re.split(r'(\d+|\D)', self.expression)
+    @staticmethod
+    def _tokenize(expression: str) -> List[Union[str, Any]]:
+        symbols = re.split(r'(\d+|\D)', expression)
         spaced_expression = ' '.join(symbols)
 
         tokens = spaced_expression.split()
         token_values = []
         for token in tokens:
-            if token in _ops:
-                token_values.append((token, _ops[token]))
+            if token in Calculator._ops:
+                token_values.append((token, Calculator._ops[token]))
             else:
-                token_values.append((_num, token))
+                token_values.append(('num', token))
         return token_values
 
     @staticmethod
     def _parse_expression(tokens: List[Union[str, Any]]) -> List[str]:
         queue, stack = [], []
         for token, value in tokens:
-            if token is _num:
+            if token == 'num':
                 queue.append(value)
-            elif token in _ops:
-                t1, p1, a1 = token, _ops[token].precedence, _ops[token].associativity
+            elif token in Calculator._ops:
+                t1, p1, a1 = token, Calculator._ops[token].precedence, Calculator._ops[token].associativity
                 while stack:
                     t2, p2, a2 = stack[-1]
-                    if (a1 == _l and p1 <= p2) or (a1 == _r and p1 < p2):
-                        if t1 != _rparen:
-                            if t2 != _lparen:
+                    if (a1 == 'left' and p1 <= p2) or (a1 == 'right' and p1 < p2):
+                        if t1 != ')':
+                            if t2 != '(':
                                 stack.pop()
                                 queue.append(t2)
                             else:
                                 break
                         else:
-                            if t2 != _lparen:
+                            if t2 != '(':
                                 stack.pop()
                                 queue.append(t2)
                             else:
@@ -89,7 +87,7 @@ class Calculator:
                                 break
                     else:
                         break
-                if t1 != _rparen:
+                if t1 != ')':
                     stack.append((t1, p1, a1))
         while stack:
             t2, _, _ = stack[-1]
@@ -98,7 +96,7 @@ class Calculator:
         return queue
 
     @staticmethod
-    def _evaluate_rpn(tokens: List[str]) -> float:
+    def _evaluate_rpn(tokens: List[str]) -> Union[float, int]:
         stack = []
         if len(tokens) == 1:
             return float(tokens[0])
@@ -126,7 +124,7 @@ class Calculator:
         return stack.pop()
 
     def calculate(self) -> Union[float, int]:
-        tokens = self._tokenize()
+        tokens = self._tokenize(self.expression)
         rpn = self._parse_expression(tokens)
         result = self._evaluate_rpn(rpn)
 
@@ -135,7 +133,7 @@ class Calculator:
         return result
 
     def __repr__(self) -> str:
-        return str(self.calculate())
+        return f'Calculator({self.expression})'
 
 
 class Cube:

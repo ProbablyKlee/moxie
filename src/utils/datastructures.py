@@ -44,7 +44,7 @@ class PartialCall(List[Any]):
     def append(self, *rhs: List[asyncio.Task[Any]]) -> None:
         super().append(*rhs)
 
-    def call(self, *args: Any, **kwargs: Any) -> asyncio.Future[List[Any]]:
+    def call(self, *args: Any, **kwargs: Any) -> asyncio.Future[List[Awaitable[Any]]]:
         return asyncio.gather(*(maybe_coroutine(func, *args, **kwargs) for func in self))
 
 
@@ -82,11 +82,7 @@ class MaxSizeList(MutableSequence[Any]):
         self._list.insert(index, value)
 
 
-class InsensitiveMapping(MutableMapping[K, V]):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._dict: MutableMapping[str, V] = {}
-        self.update(dict(*args, **kwargs))
-
+class InsensitiveMapping(dict):
     def __contains__(self, k: K) -> bool:
         return super().__contains__(k.casefold())
 
@@ -99,19 +95,6 @@ class InsensitiveMapping(MutableMapping[K, V]):
     def __setitem__(self, k: K, v: V) -> None:
         super().__setitem__(k.casefold(), v)
 
-    def __iter__(self) -> Iterator[str | K]:
-        return iter(self._dict)
-
-    def __len__(self) -> int:
-        return len(self._dict)
-
-    def clear(self) -> None:
-        self._dict.clear()
-
-    def copy(self) -> "InsensitiveMapping[K, V]":
-        """Return a shallow copy of this mapping."""
-        return InsensitiveMapping(self._dict)
-
     def get(self, k: K, default: Optional[V] = None) -> V | None:
         return super().get(k.casefold(), default)
 
@@ -122,4 +105,4 @@ class InsensitiveMapping(MutableMapping[K, V]):
         for key, value in other.items():
             self[key] = value
         for key, value in kwargs.items():
-            self[key] = value  # type: ignore
+            self[key] = value

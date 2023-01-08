@@ -151,7 +151,7 @@ class Context(commands.Context["RoboMoxie"]):
 
         if embed:
             new_embed = embed.to_dict()
-            new_embed.update(original_embed.to_dict())
+            new_embed.update(original_embed.to_dict())  # type: ignore  # pyright: shut up
             original_embed = MoxieEmbed.from_dict(new_embed)
 
         to_send = (self.send, self.maybe_reply)

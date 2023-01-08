@@ -19,32 +19,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-from pydantic import BaseSettings
-
-__all__ = ("Settings",)
-
-
-class Settings(BaseSettings):
-    """Settings for the bot."""
-
-    TOKEN: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    HOST: str
-    PORT: int = 6000
-
-    REDIS_HOST: str
-    REDIS_PORT: int = 6001
-    REDIS_DB: int = 0
-
-    DOCKER_INFLUXDB_INIT_ORG: str
-    DOCKER_INFLUXDB_INIT_BUCKET: str
-    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: str
-
-    OWNER_IDS: str
-    TRANSCRIPT_CHANNEL: int
-
-    class Config(BaseSettings.Config):
-        env_file = ".env"
-        env_file_encoding = "utf-8"

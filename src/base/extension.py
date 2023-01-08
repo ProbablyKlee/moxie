@@ -19,32 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-from pydantic import BaseSettings
+from __future__ import annotations
 
-__all__ = ("Settings",)
+from typing import TYPE_CHECKING
+from discord.ext import commands
+from src.constants import Extension
+
+if TYPE_CHECKING:
+    from src.classes import RoboMoxie, Context
+
+__all__ = ("BaseCommandExtension", "BaseEventExtension")
 
 
-class Settings(BaseSettings):
-    """Settings for the bot."""
+class BaseExtension(commands.Cog):
+    """Base class for all extensions."""
 
-    TOKEN: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    HOST: str
-    PORT: int = 6000
+    def __init__(self, bot: RoboMoxie) -> None:
+        self.bot = bot
 
-    REDIS_HOST: str
-    REDIS_PORT: int = 6001
-    REDIS_DB: int = 0
 
-    DOCKER_INFLUXDB_INIT_ORG: str
-    DOCKER_INFLUXDB_INIT_BUCKET: str
-    DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: str
+class BaseEventExtension(BaseExtension):
+    """Base class for all event extensions."""
 
-    OWNER_IDS: str
-    TRANSCRIPT_CHANNEL: int
+    @property
+    def emoji(self) -> str:
+        return Extension.EVENT
 
-    class Config(BaseSettings.Config):
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+
+class BaseCommandExtension(BaseExtension):
+    """Base class for all command extensions."""
+
+    @property
+    def emoji(self) -> str:
+        raise NotImplementedError
+
+    async def cog_check(self, ctx: Context[RoboMoxie]) -> bool:
+        raise NotImplementedError

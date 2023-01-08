@@ -67,7 +67,7 @@ class RoboMoxie(commands.Bot):
             message_content=True,
         )
         super().__init__(
-            self.get_prefix, intents=intents, case_insensitive=True, owner_ids=list(map(int, Settings.OWNER_IDS.split(" ")))
+            self.get_prefix, intents=intents, case_insensitive=True, owner_ids=list(map(int, settings.OWNER_IDS.split(" ")))
         )
         self.call: PartialCall = PartialCall()
         self.settings: Settings = settings
@@ -112,13 +112,20 @@ class RoboMoxie(commands.Bot):
     ) -> Union[Context | commands.Context[Self], None]:
         return await super().get_context(origin, cls=Context or cls)
 
+    async def get_or_fetch_channel(self, channel_id: int, /) -> Optional[discord.abc.MessageableChannel]:
+        channel = self.get_channel(channel_id)
+        if channel is None:
+            channel = await self.fetch_channel(channel_id)
+
+        return channel
+
     async def fill_user_cache(self) -> None:
         records = await self.db.fetch("SELECT * FROM users", simple=False)
         for record in records:
             if record["user_id"] in self.cached_users:
                 continue
 
-            user = User(record, self.db.pool)
+            user = User(record, self)
             self.cached_users[user.user_id] = user
 
     async def fill_guild_cache(self) -> None:
@@ -127,7 +134,7 @@ class RoboMoxie(commands.Bot):
             if record["guild_id"] in self.cached_guilds:
                 continue
 
-            guild = Guild(record, self.db.pool)
+            guild = Guild(record, self)
             self.cached_guilds[guild.guild_id] = guild
 
     async def fill_prefix_cache(self) -> None:
@@ -208,7 +215,7 @@ class RoboMoxie(commands.Bot):
         for extension in extensions:
             name = extension[:-3] if extension.endswith('.py') else extension
             try:
-                await self.load_extension(f'source.extensions.{name}')
+                await self.load_extension(f'src.extensions.{name}')
                 self.logger.info(f"[{name.upper()}] Loaded successfully.")
 
             except Exception as exc:

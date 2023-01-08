@@ -27,7 +27,7 @@ from discord.abc import Snowflake
 
 from .baseclass import CONSTANTS
 
-__all__ = ('Colours', 'RMoxie', 'Ext', 'Regex', 'Bots', 'Emojis')
+__all__ = ('Colours', 'RMoxie', 'Extension', 'Regex', 'Bots', 'Emojis')
 
 
 class Colours(CONSTANTS):
@@ -68,6 +68,6 @@ class Emojis(CONSTANTS):
     STOP: str = "<:please_stop:1057473529437765653>"
 
 
-class Ext(CONSTANTS):
+class Extension(CONSTANTS):
 
-    ...
+    EVENT: str = "<:nyarch:1045798019628544131>"
