@@ -79,8 +79,8 @@ class EventDispatcher(BaseEventExtension):
             except Exception as exc:
                 self.bot.logger.debug("Failed to check permissions for command %s", command.name, exc_info=exc)
 
-        command_sequence = sorted(list(itertools.chain.from_iterable(command_sequence)), key=len)  # type: ignore
-        matches = self.bot.get_close_matches(ctx.invoked_with, command_sequence, n=1, cutoff=0.7)  # 0.7 is arbitrary
+        command_list = list(itertools.chain.from_iterable(command_sequence))  # type: ignore
+        matches = self.bot.get_close_matches(ctx.invoked_with, command_list, cutoff=0.7)  # 0.7 is arbitrary
 
         if not matches:
             return
