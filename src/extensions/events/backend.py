@@ -28,6 +28,8 @@ import asyncio
 import aiohttp
 import datetime
 
+from typing import ClassVar, Dict
+
 import discord
 from discord.ext import commands
 
@@ -41,6 +43,13 @@ settings: Settings = Settings()  # type: ignore
 
 class BackendEventHandler(BaseEventExtension):
     """Handles user and guild related events."""
+
+    status_text: ClassVar[Dict[discord.Status, str]] = {
+        discord.Status.online: "online",
+        discord.Status.idle: "idle",
+        discord.Status.dnd: "dnd",
+        discord.Status.offline: "offline",
+    }
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
@@ -125,13 +134,6 @@ class BackendEventHandler(BaseEventExtension):
         if before.bot:
             return
 
-        status_text = {
-            discord.Status.online: "online",
-            discord.Status.idle: "idle",
-            discord.Status.dnd: "dnd",
-            discord.Status.offline: "offline",
-        }
-
         if before.status != after.status:
             query = """
                     INSERT INTO activity_history (
@@ -147,9 +149,12 @@ class BackendEventHandler(BaseEventExtension):
                         last_update = $4, 
                         last_status = $5
                 """.format(
-                status_text[before.status], status_text[after.status], status_text[before.status], status_text[after.status]
+                self.status_text[before.status],
+                self.status_text[after.status],
+                self.status_text[before.status],
+                self.status_text[after.status],
             )
 
             await self.bot.db.execute(
-                query, before.id, 0, 0, datetime.datetime.now(tz=datetime.timezone.utc), status_text[after.status]
+                query, before.id, 0, 0, datetime.datetime.now(tz=datetime.timezone.utc), self.status_text[after.status]
             )
