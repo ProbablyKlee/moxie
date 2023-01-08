@@ -87,16 +87,12 @@ class EventDispatcher(BaseEventExtension):
 
         confirm = await ctx.confirm(
             message=(
-                f"Sorry, but the command **{ctx.invoked_with}** was not found.\n"
-                f"**did you mean... `{matches[0]}`?**"
+                f"Sorry, but the command **{ctx.invoked_with}** was not found.\n" f"**did you mean... `{matches[0]}`?**"
             ),
             delete_after_cancel=True,
             delete_after_confirm=True,
             delete_after_timeout=True,
-            buttons=(
-                ('▶', f'execute {matches[0]}', discord.ButtonStyle.primary),
-                ('🗑', None, discord.ButtonStyle.red)
-            ),
+            buttons=(('▶', f'execute {matches[0]}', discord.ButtonStyle.primary), ('🗑', None, discord.ButtonStyle.red)),
             timeout=30,
         )
 
