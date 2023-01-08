@@ -151,11 +151,11 @@ class Context(commands.Context["RoboMoxie"]):
 
         if embed:
             new_embed = embed.to_dict()
-            new_embed.update(original_embed.to_dict())  # type: ignore  # pyright: shut up
+            new_embed.update(original_embed.to_dict())  # type: ignore
             original_embed = MoxieEmbed.from_dict(new_embed)
 
         to_send = (self.send, self.maybe_reply)
-        if self.guild is not None and not self.channel.permissions_for(self.me).embed_links:
+        if self.guild is not None and not self.channel.permissions_for(self.me).embed_links:  # type: ignore
             message: str = "Embed links permission not found in %s (%s)."
             logger.warning(message, self.channel, self.guild)
             raise commands.BotMissingPermissions(["embed_links"])

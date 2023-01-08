@@ -24,7 +24,6 @@ services:
   grafana:
     image: grafana/grafana
     restart: always
-    # user: "472"
     env_file: .env
     volumes:
       - "grafana_lib:/var/lib/grafana"
