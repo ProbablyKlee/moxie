@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: str
 
     OWNER_IDS: str
+    TRANSCRIPT_CHANNEL: int
 
     class Config(BaseSettings.Config):
         env_file = ".env"

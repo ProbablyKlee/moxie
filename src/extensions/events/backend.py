@@ -22,16 +22,21 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import re
+import uuid
 import imghdr
 import asyncio
 import aiohttp
-
-from typing import Dict
+import datetime
 
 import discord
 from discord.ext import commands
-from src.base import BaseEventExtension
+
+from src.config import Settings
 from src.models import Guild, User
+from src.base import BaseEventExtension
+
+__all__ = ("BackendEventHandler",)
+settings: Settings = Settings()  # type: ignore
 
 
 class BackendEventHandler(BaseEventExtension):
@@ -94,17 +99,57 @@ class BackendEventHandler(BaseEventExtension):
             self.bot.logger.debug(f"User {before!r} changed their discriminator")
 
     @commands.Cog.listener()
+    async def on_user_avatar_update(self, before: discord.Member, after: discord.Member) -> None:
+        if before.bot:
+            return  # Naughty bots
+
+        transcript = await self.bot.get_or_fetch_channel(settings.TRANSCRIPT_CHANNEL)
+
+        try:
+            avatar = await after.display_avatar.read()
+        except discord.HTTPException as exc:
+            self.bot.logger.debug(f"Failed to get avatar for {after!r} ({exc.code})")
+            return
+
+        await self.bot.db.execute(
+            "SELECT insert_avatar_history_item($1, $2, $3);", after.id, imghdr.what(None, avatar), avatar
+        )
+
+        if transcript is not None:
+            filename = f"{uuid.uuid4().hex[:16]}.png"
+            message = await transcript.send(file=discord.File(avatar, filename=filename), content="free real estate")
+            await User.insert_history_item(after, "url", message.attachments[0].url, self.bot)
+
+    @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:
         if before.bot:
             return
 
-        if before.status != after.status:
-            self.bot.logger.debug(f"User {before!r} changed their status to {after.status!r}")
-            _: Dict[discord.Status, str] = {
-                discord.Status.online: "online",
-                discord.Status.idle: "idle",
-                discord.Status.dnd: "dnd",
-                discord.Status.offline: "offline",
-            }
+        status_text = {
+            discord.Status.online: "online",
+            discord.Status.idle: "idle",
+            discord.Status.dnd: "dnd",
+            discord.Status.offline: "offline",
+        }
 
-            # TODO: Database stuff
+        if before.status != after.status:
+            query = """
+                    INSERT INTO activity_history (
+                        user_id,
+                        seconds_{},
+                        seconds_{},
+                        last_update, last_status)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT (user_id)
+                    DO UPDATE SET 
+                        seconds_{} = activity_history.seconds_{} + 
+                        EXTRACT(EPOCH FROM ($4 - activity_history.last_update)),
+                        last_update = $4, 
+                        last_status = $5
+                """.format(
+                status_text[before.status], status_text[after.status], status_text[before.status], status_text[after.status]
+            )
+
+            await self.bot.db.execute(
+                query, before.id, 0, 0, datetime.datetime.now(tz=datetime.timezone.utc), status_text[after.status]
+            )

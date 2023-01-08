@@ -110,6 +110,13 @@ class RoboMoxie(commands.Bot):
     ) -> Union[Context | commands.Context[Self], None]:
         return await super().get_context(origin, cls=Context or cls)
 
+    async def get_or_fetch_channel(self, channel_id: int, /) -> Optional[discord.abc.MessageableChannel]:
+        channel = self.get_channel(channel_id)
+        if channel is None:
+            channel = await self.fetch_channel(channel_id)
+
+        return channel
+
     async def fill_user_cache(self) -> None:
         records = await self.db.fetch("SELECT * FROM users", simple=False)
         for record in records:
