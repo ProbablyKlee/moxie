@@ -126,7 +126,7 @@ class BackendEventHandler(BaseEventExtension):
 
         if transcript is not None:
             filename = f"{uuid.uuid4().hex[:16]}.png"
-            message = await transcript.send(file=discord.File(avatar, filename=filename), content="free real estate")
+            message = await transcript.send(file=discord.File(avatar, filename=filename), content="Free real estate")
             await User.insert_history_item(after, "url", message.attachments[0].url, self.bot)
 
     @commands.Cog.listener()
