@@ -35,6 +35,7 @@ import collections
 
 from asyncio import ensure_future
 from typing import Callable, Optional, Self, Union, Dict, List, cast
+from redis import Redis
 
 import aiohttp
 import asyncpg
@@ -81,6 +82,9 @@ class RoboMoxie(commands.Bot):
         self.session: Optional[aiohttp.ClientSession] = None
         self.pool: Optional[asyncpg.Pool] = None
         self.db: Optional[DatabaseConnector] = None
+
+        # redis
+        self.redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
 
         # Cache
         self.cached_users: Dict[int, User] = {}
