@@ -17,7 +17,8 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 -- DEALINGS IN THE SOFTWARE.
 --
-CREATE TABLE IF NOT EXISTS user_history (
+CREATE TABLE IF NOT EXISTS user_history
+(
     id serial not null,
     user_id bigint not null,
     user_type text not null,
@@ -47,9 +48,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE SEQUENCE IF NOT EXISTS user_history_id_seq;
+CREATE SEQUENCE IF NOT EXISTS user_history_id_seq;  -- basic iterable sequence for ids (i forgot why i made this)
 DROP TABLE IF EXISTS avatar_history;
-CREATE TABLE IF NOT EXISTS avatar_history (
+CREATE TABLE IF NOT EXISTS avatar_history
+(
    user_id bigint not null,
    avatar_id bigint not null default nextval('user_history_id_seq'),
    format text not null,
@@ -76,3 +78,20 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS activity_history
+(
+    user_id bigint not null,
+    seconds_online bigint not null default 0,
+    seconds_offline bigint not null default 0,
+    seconds_idle bigint not null default 0,
+    seconds_dnd bigint not null default 0,
+    last_update timestamp with time zone not null default now(),
+    last_status text not null default 'offline',
+    CONSTRAINT activity_history_fkey FOREIGN KEY (user_id)
+        REFERENCES users (user_id) MATCH SIMPLE
+        ON DELETE CASCADE,
+    CONSTRAINT activity_history_user_id_key UNIQUE (user_id)
+);
+
+CREATE INDEX IF NOT EXISTS activity_history_user_id_idx ON activity_history (user_id);
