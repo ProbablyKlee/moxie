@@ -45,7 +45,7 @@ from discord import Message, Interaction
 
 from src.models import Guild, User
 from src.config import Settings, Logger
-from src.utils import PartialCall, InsensitiveMapping
+from src.utils import PartialCall, InsensitiveMapping, make_async
 
 from . import DatabaseConnector, Context
 
@@ -99,6 +99,7 @@ class RoboMoxie(commands.Bot):
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         self._is_day = 23 >= now.hour >= 8
 
+    @make_async
     @functools.lru_cache(maxsize=256)
     def get_close_matches(self, word: str, possibilities: List[str], /, *, cutoff: float = 0.6) -> Optional[List[str]]:
         return difflib.get_close_matches(word, possibilities, cutoff=cutoff) or []

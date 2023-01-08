@@ -31,6 +31,7 @@ from typing import (
     Callable,
     Literal,
     Tuple,
+    Union,
     Any,
 )
 
@@ -51,6 +52,7 @@ if TYPE_CHECKING:
     from . import RoboMoxie, MoxieEmbed
 
 from src.utils import make_async
+from src.views import ConfirmView
 
 logger = logging.getLogger(__name__)
 embed_only_kwargs = [
@@ -142,7 +144,6 @@ class Context(commands.Context["RoboMoxie"]):
         self,
         content: Optional[str] = None,
         *,
-        reply: bool = False,
         mention_author: bool = False,
         embed: Optional[discord.Embed] = None,
         **kwargs: Any,
@@ -162,3 +163,70 @@ class Context(commands.Context["RoboMoxie"]):
 
         send_dict = {x: y for x, y in kwargs.items() if x not in embed_only_kwargs}
         return await to_send(content=content, mention_author=mention_author, embed=original_embed, **send_dict)  # type: ignore
+
+    async def confirm(
+        self,
+        message: str,
+        buttons: Tuple[
+            Tuple[str | None, str | None, discord.ButtonStyle],
+            Tuple[str | None, str | None, discord.ButtonStyle],
+        ],
+        delete_after_confirm: bool = True,
+        delete_after_cancel: bool = True,
+        delete_after_timeout: bool = True,
+        timeout: float = 60.0,
+        return_message: bool = False,
+        owner: Optional[discord.User | discord.Member] = None,
+    ) -> Union[bool, Tuple[Optional[bool], discord.Message]]:
+
+        delete_after_cancel = delete_after_cancel if delete_after_cancel is not None else delete_after_confirm
+
+        view = ConfirmView(
+            ctx=self,
+            buttons=(buttons or (("✅", "Yes please!", discord.ButtonStyle.green), ("🗑️", "Nuuu!", discord.ButtonStyle.red))),
+            timeout=timeout,
+            owner=owner,
+        )
+
+        message = await self.send(message, view=view)
+        await view.wait()
+
+        if False in (delete_after_confirm, delete_after_cancel, delete_after_timeout):
+            view._children = [view.children[0]]
+            for child in view.children:
+                child.disabled = True
+                if view.value is False:
+                    child.label = "Cancelled"
+                    child.emoji = ("🗑️",)
+                    child.style = discord.ButtonStyle.red
+                elif view.value is True:
+                    child.label = "Confirmed"
+                    child.emoji = ("✅",)
+                    child.style = discord.ButtonStyle.green
+                else:
+                    child.label = "Timed out"
+                    child.emoji = ("⏰",)
+                    child.style = discord.ButtonStyle.grey
+        view.stop()
+        if view.value is None:
+            try:
+                if return_message is False:
+                    (await message.edit(view=view)) if delete_after_timeout is False else (await message.delete())
+            except (discord.Forbidden, discord.HTTPException):
+                pass
+            return (None, message) if delete_after_timeout is False and return_message is True else None
+        elif view.value:
+            try:
+                if return_message is False:
+                    (await message.edit(view=view)) if delete_after_confirm is False else (await message.delete())
+            except (discord.Forbidden, discord.HTTPException):
+                pass
+            return (True, message) if delete_after_confirm is False and return_message is True else True
+        else:
+            try:
+                if return_message is False:
+                    (await message.edit(view=view)) if delete_after_cancel is False else (await message.delete())
+            except (discord.Forbidden, discord.HTTPException):
+                pass
+
+            return (False, message) if delete_after_cancel is False and return_message is True else False
