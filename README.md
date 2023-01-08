@@ -1,3 +1,3 @@
-# R.-Moxie
+# moxie
 
-Just a little bit of text, so it doesn't look that empty here ^^
+os discord bot
