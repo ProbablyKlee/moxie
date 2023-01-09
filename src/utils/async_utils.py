@@ -68,9 +68,7 @@ class AsyncTimeToLiveCache:
         def __init__(self, time_to_live: int, maxsize: int) -> None:
             super().__init__(maxsize=maxsize)
 
-            self.time_to_live = (
-                datetime.timedelta(seconds=time_to_live) if time_to_live else None
-            )
+            self.time_to_live = datetime.timedelta(seconds=time_to_live) if time_to_live else None
 
             self.maxsize = maxsize
 
@@ -90,11 +88,7 @@ class AsyncTimeToLiveCache:
             return value
 
         def __setitem__(self, key: Any, value: Any) -> None:
-            ttl_value = (
-                (datetime.datetime.now() + self.time_to_live)
-                if self.time_to_live
-                else None
-            )
+            ttl_value = (datetime.datetime.now() + self.time_to_live) if self.time_to_live else None
             super().__setitem__(key, (value, ttl_value))
 
     def __init__(self, time_to_live: int = 60, maxsize: int = 1024, skip_args: int = 0) -> None:
@@ -111,7 +105,7 @@ class AsyncTimeToLiveCache:
 
     def __call__(self, func: Callable) -> Callable:
         async def wrapper(*args, use_cache=True, **kwargs) -> Any:
-            key = Key(args[self.skip_args:], kwargs)
+            key = Key(args[self.skip_args :], kwargs)
             if key in self.lrucache and use_cache:
                 return self.lrucache[key]
 
