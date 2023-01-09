@@ -21,6 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING, ClassVar, Dict, Callable, Type, MutableSequence, Tuple, List
 
 import copy
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
     from src.classes import Context, RoboMoxie
 
 from src.base import BaseEventExtension
+from src.utils import TimeToLiveCache
 
 
 class EventDispatcher(BaseEventExtension):
@@ -42,6 +44,7 @@ class EventDispatcher(BaseEventExtension):
     def __init__(self, bot: RoboMoxie) -> None:
         super().__init__(bot)
 
+        self.cached_ttl: TimeToLiveCache = TimeToLiveCache()
         self.error_handlers: Dict[Type[commands.CommandError], Callable[[Context, commands.CommandError], None]] = {
             commands.NoPrivateMessage: lambda *_: None,
             commands.DisabledCommand: lambda *_: None,
@@ -57,6 +60,15 @@ class EventDispatcher(BaseEventExtension):
             commands.CommandOnCooldown: lambda ctx, error: self.bot.dispatch("command_on_cooldown", ctx, error),
             commands.NotOwner: lambda ctx, error: self.bot.dispatch("not_owner", ctx, error),
         }
+
+    def insert_user_rate_limit(self, user: discord.Member, rate_limit: int) -> None:
+        self.cached_ttl.user_time_to_lives[user.id] = datetime.timedelta(seconds=rate_limit)
+
+    def check_user_rate_limited(self, user: discord.Member) -> bool:
+        time_to_live = self.cached_ttl.user_time_to_lives.get(user.id, None)
+        if time_to_live:
+            return user.id in self.cached_ttl.lrucache and self.cached_ttl.lrucache[user.id] > datetime.datetime.utcnow()
+        return False
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error: commands.CommandError) -> None:

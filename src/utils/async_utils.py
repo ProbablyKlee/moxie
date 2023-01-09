@@ -43,10 +43,6 @@ class LruCache(OrderedDict):
 
 class AsyncCache:
     def __init__(self, maxsize: int = 128) -> None:
-        """
-        maxsize:
-            Use maxsize as None for unlimited size cache
-        """
         self.lrucache = LruCache(maxsize)
 
     def __call__(self, func: Callable) -> Callable:
@@ -63,13 +59,12 @@ class AsyncCache:
         return wrapper
 
 
-class AsyncTimeToLiveCache:
+class TimeToLiveCache:
     class _TimeToLive(LruCache):
         def __init__(self, time_to_live: int, maxsize: int) -> None:
             super().__init__(maxsize=maxsize)
 
             self.time_to_live = datetime.timedelta(seconds=time_to_live) if time_to_live else None
-
             self.maxsize = maxsize
 
         def __contains__(self, key: Any) -> bool:
@@ -92,20 +87,16 @@ class AsyncTimeToLiveCache:
             super().__setitem__(key, (value, ttl_value))
 
     def __init__(self, time_to_live: int = 60, maxsize: int = 1024, skip_args: int = 0) -> None:
-        """
-        time_to_live:
-            Time to live in seconds
-        maxsize:
-            Use maxsize as None for unlimited size cache
-        skip_args:
-            Skip args in cache key
-        """
         self.lrucache = self._TimeToLive(time_to_live, maxsize)
         self.skip_args = skip_args
+        self.user_time_to_lives = {}
 
     def __call__(self, func: Callable) -> Callable:
         async def wrapper(*args, use_cache=True, **kwargs) -> Any:
-            key = Key(args[self.skip_args :], kwargs)
+            user_id = args[self.skip_args]
+            key = user_id
+            time_to_live = self.user_time_to_lives.get(user_id, self.lrucache.time_to_live)
+            self.lrucache.time_to_live = time_to_live
             if key in self.lrucache and use_cache:
                 return self.lrucache[key]
 
