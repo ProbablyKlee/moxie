@@ -19,22 +19,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
+from typing import Any, OrderedDict, Callable
 import datetime
 
-from typing import Any
-from collections import OrderedDict
+
+class LruCache(OrderedDict):
+    def __init__(self, maxsize: int, *args: Any, **kwargs: Any) -> None:
+        self.maxsize = maxsize
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, key: Any) -> Any:
+        value = super().__getitem__(key)
+        self.move_to_end(key)
+        return value
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        super().__setitem__(key, value)
+        if self.maxsize and len(self) > self.maxsize:
+            oldest = next(iter(self))
+            del self[oldest]
 
 
 class AsyncCache:
-    def __init__(self, maxsize=128) -> None:
+    def __init__(self, maxsize: int = 128) -> None:
         """
         maxsize:
             Use maxsize as None for unlimited size cache
         """
         self.lrucache = LruCache(maxsize)
 
-    def __call__(self, func) -> Any:
-        async def wrapper(*args, use_cache=True, **kwargs):
+    def __call__(self, func: Callable) -> Callable:
+        async def wrapper(*args: Any, use_cache=True, **kwargs: Any) -> Any:
             key = Key(args, kwargs)
             if key in self.lrucache and use_cache:
                 return self.lrucache[key]
@@ -49,7 +65,7 @@ class AsyncCache:
 
 class AsyncTimeToLiveCache:
     class _TimeToLive(LruCache):
-        def __init__(self, time_to_live, maxsize) -> None:
+        def __init__(self, time_to_live: int, maxsize: int) -> None:
             super().__init__(maxsize=maxsize)
 
             self.time_to_live = (
@@ -58,7 +74,7 @@ class AsyncTimeToLiveCache:
 
             self.maxsize = maxsize
 
-        def __contains__(self, key) -> bool:
+        def __contains__(self, key: Any) -> bool:
             if key not in self.keys():
                 return False
 
@@ -69,11 +85,11 @@ class AsyncTimeToLiveCache:
 
             return True
 
-        def __getitem__(self, key) -> Any:
+        def __getitem__(self, key: Any) -> Any:
             value = super().__getitem__(key)[0]
             return value
 
-        def __setitem__(self, key, value) -> None:
+        def __setitem__(self, key: Any, value: Any) -> None:
             ttl_value = (
                 (datetime.datetime.now() + self.time_to_live)
                 if self.time_to_live
@@ -81,28 +97,26 @@ class AsyncTimeToLiveCache:
             )
             super().__setitem__(key, (value, ttl_value))
 
-    def __init__(self, time_to_live=60, maxsize=1024, skip_args: int = 0) -> None:
+    def __init__(self, time_to_live: int = 60, maxsize: int = 1024, skip_args: int = 0) -> None:
         """
         time_to_live:
-            Use time_to_live as None for non expiring cache
+            Time to live in seconds
         maxsize:
             Use maxsize as None for unlimited size cache
         skip_args:
-            Use `1` to skip first arg of func in determining cache key
+            Skip args in cache key
         """
-        self.ttl = self._TimeToLive(time_to_live=time_to_live, maxsize=maxsize)
+        self.lrucache = self._TimeToLive(time_to_live, maxsize)
         self.skip_args = skip_args
 
-    def __call__(self, func) -> Any:
-        async def wrapper(*args, use_cache=True, **kwargs):
+    def __call__(self, func: Callable) -> Callable:
+        async def wrapper(*args, use_cache=True, **kwargs) -> Any:
             key = Key(args[self.skip_args:], kwargs)
-            if key in self.ttl and use_cache:
-                val = self.ttl[key]
-            else:
-                self.ttl[key] = await func(*args, **kwargs)
-                val = self.ttl[key]
+            if key in self.lrucache and use_cache:
+                return self.lrucache[key]
 
-            return val
+            self.lrucache[key] = await func(*args, **kwargs)
+            return self.lrucache[key]
 
         wrapper.__name__ += func.__name__
 
@@ -114,9 +128,6 @@ class Key:
         self.args = args
         self.kwargs = kwargs
         kwargs.pop("use_cache", None)
-
-    def __eq__(self, obj) -> bool:
-        return hash(self) == hash(obj)
 
     def __hash__(self) -> int:
         def _hash(param: Any) -> Any:
@@ -130,20 +141,3 @@ class Key:
                 return str(param)
 
         return hash(_hash(self.args) + _hash(self.kwargs))
-
-
-class LruCache(OrderedDict):
-    def __init__(self, maxsize, *args, **kwargs) -> None:
-        self.maxsize = maxsize
-        super().__init__(*args, **kwargs)
-
-    def __getitem__(self, key) -> Any:
-        value = super().__getitem__(key)
-        self.move_to_end(key)
-        return value
-
-    def __setitem__(self, key, value) -> None:
-        super().__setitem__(key, value)
-        if self.maxsize and len(self) > self.maxsize:
-            oldest = next(iter(self))
-            del self[oldest]

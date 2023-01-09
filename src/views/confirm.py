@@ -60,7 +60,7 @@ class DeclineButton(discord.ui.Button):
 class ConfirmView(discord.ui.View):
     def __init__(
         self,
-        ctx: Context,
+        ctx: "Context",
         buttons: Tuple[
             Tuple[str | None, str | None, discord.ButtonStyle],
             Tuple[str | None, str | None, discord.ButtonStyle],
