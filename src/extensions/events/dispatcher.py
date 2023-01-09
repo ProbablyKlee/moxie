@@ -22,10 +22,9 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, ClassVar, Dict, Callable, Type, MutableSequence, Tuple, List
+from typing import TYPE_CHECKING, Dict, Callable, Type
 
 import copy
-import asyncio
 import itertools
 
 import discord
@@ -57,11 +56,13 @@ class EventDispatcher(BaseEventExtension):
             commands.BadArgument: lambda ctx, error: self.bot.dispatch("bad_argument", ctx, error),
             commands.MissingPermissions: lambda ctx, error: self.bot.dispatch("missing_permissions", ctx, error),
             commands.BotMissingPermissions: lambda ctx, error: self.bot.dispatch("bot_missing_permissions", ctx, error),
-            commands.CommandOnCooldown: lambda ctx, error: self.bot.dispatch("command_on_cooldown", ctx, error),
+            commands.CommandOnCooldown: lambda ctx, error: self.bot.loop.create_task(
+                self.handle_command_on_cooldown(ctx, error)
+            ),
             commands.NotOwner: lambda ctx, error: self.bot.dispatch("not_owner", ctx, error),
         }
 
-    def insert_user_rate_limit(self, user: discord.Member, rate_limit: int) -> None:
+    def insert_user_rate_limit(self, user: discord.Member, rate_limit: int | float) -> None:
         self.cached_ttl.user_time_to_lives[user.id] = datetime.timedelta(seconds=rate_limit)
 
     def check_user_rate_limited(self, user: discord.Member) -> bool:
@@ -114,3 +115,13 @@ class EventDispatcher(BaseEventExtension):
             message.content = message.content.replace(ctx.invoked_with, matches[0])
 
             await self.bot.process_commands(message)
+
+    async def handle_command_on_cooldown(self, ctx: Context, error: commands.CommandOnCooldown) -> None:
+        if self.check_user_rate_limited(ctx.author):
+            return
+
+        self.insert_user_rate_limit(ctx.author, error.retry_after)
+        timestamp = discord.utils.format_dt(
+            datetime.datetime.utcnow() + datetime.timedelta(seconds=error.retry_after), style="R"
+        )
+        await ctx.send("⏰ | %s, you are on cooldown. Try again in %s." % (ctx.author.mention, timestamp))
