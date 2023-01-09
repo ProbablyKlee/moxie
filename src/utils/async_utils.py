@@ -94,14 +94,14 @@ class TimeToLiveCache:
     def __call__(self, func: Callable) -> Callable:
         async def wrapper(*args, use_cache=True, **kwargs) -> Any:
             user_id = args[self.skip_args]
-            key = user_id
             time_to_live = self.user_time_to_lives.get(user_id, self.lrucache.time_to_live)
-            self.lrucache.time_to_live = time_to_live
-            if key in self.lrucache and use_cache:
-                return self.lrucache[key]
 
-            self.lrucache[key] = await func(*args, **kwargs)
-            return self.lrucache[key]
+            self.lrucache.time_to_live = time_to_live
+            if user_id in self.lrucache and use_cache:
+                return self.lrucache[user_id]
+
+            self.lrucache[user_id] = await func(*args, **kwargs)
+            return self.lrucache[user_id]
 
         wrapper.__name__ += func.__name__
 

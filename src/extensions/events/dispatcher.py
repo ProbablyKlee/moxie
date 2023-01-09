@@ -21,10 +21,10 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING, Dict, Callable, Type
 
 import copy
+import datetime
 import itertools
 
 import discord
@@ -33,8 +33,8 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from src.classes import Context, RoboMoxie
 
-from src.base import BaseEventExtension
 from src.utils import TimeToLiveCache
+from src.base import BaseEventExtension
 
 
 class EventDispatcher(BaseEventExtension):
@@ -51,14 +51,14 @@ class EventDispatcher(BaseEventExtension):
             commands.CommandNotFound: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_command_not_found(ctx, error)
             ),
+            commands.CommandOnCooldown: lambda ctx, error: self.bot.loop.create_task(
+                self.handle_command_on_cooldown(ctx, error)
+            ),
             commands.MissingRequiredArgument: lambda ctx, error: self.bot.dispatch("missing_required_argument", ctx, error),
             commands.MemberNotFound: lambda ctx, error: self.bot.dispatch("member_not_found", ctx, error),
             commands.BadArgument: lambda ctx, error: self.bot.dispatch("bad_argument", ctx, error),
             commands.MissingPermissions: lambda ctx, error: self.bot.dispatch("missing_permissions", ctx, error),
             commands.BotMissingPermissions: lambda ctx, error: self.bot.dispatch("bot_missing_permissions", ctx, error),
-            commands.CommandOnCooldown: lambda ctx, error: self.bot.loop.create_task(
-                self.handle_command_on_cooldown(ctx, error)
-            ),
             commands.NotOwner: lambda ctx, error: self.bot.dispatch("not_owner", ctx, error),
         }
 
