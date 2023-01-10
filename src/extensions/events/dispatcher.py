@@ -81,7 +81,7 @@ class EventDispatcher(BaseEventExtension):
             return
 
         handler = self.error_handlers.get(
-            type(error), lambda _ctx, _error: self.bot.logger.exception("Unhandled command error!", exc_info=error)
+            type(error), lambda _ctx, _error: self.bot.logger.exception("Unhandled command at %s" % error, exc_info=error)
         )
         handler(ctx, error)
 
