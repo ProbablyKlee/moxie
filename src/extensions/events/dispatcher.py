@@ -33,6 +33,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from src.classes import Context, RoboMoxie
 
+from src.classes import MoxieEmbed
 from src.utils import TimeToLiveCache
 from src.base import BaseEventExtension
 
@@ -45,23 +46,25 @@ class EventDispatcher(BaseEventExtension):
 
         self.cached_ttl: TimeToLiveCache = TimeToLiveCache()
         self.error_handlers: Dict[Any, Callable[[Context, commands.CommandError], None]] = {
-            commands.NoPrivateMessage: lambda *_: None,
-            commands.BotMissingPermissions: lambda *_: None,
-            commands.DisabledCommand: lambda *_: None,
-            commands.PrivateMessageOnly: lambda *_: None,
-            commands.NotOwner: lambda *_: None,
-            commands.CommandNotFound: lambda ctx, error: self.bot.loop.create_task(
+            commands.errors.NoPrivateMessage: lambda *_: None,
+            commands.errors.BotMissingPermissions: lambda *_: None,
+            commands.errors.DisabledCommand: lambda *_: None,
+            commands.errors.PrivateMessageOnly: lambda *_: None,
+            commands.errors.NotOwner: lambda *_: None,
+            commands.errors.CommandNotFound: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_command_not_found(ctx, error)
             ),
-            commands.CommandOnCooldown: lambda ctx, error: self.bot.loop.create_task(
+            commands.errors.CommandOnCooldown: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_command_on_cooldown(ctx, error)
             ),
-            commands.MissingRequiredArgument: lambda ctx, error: self.bot.loop.create_task(
+            commands.errors.MissingRequiredArgument: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_required_argument(ctx, error)
             ),
-            commands.MemberNotFound: lambda ctx, error: self.bot.loop.create_task(self.handle_member_not_found(ctx, error)),
-            commands.BadArgument: lambda ctx, error: self.bot.loop.create_task(self.handle_bad_argument(ctx, error)),
-            commands.MissingPermissions: lambda ctx, error: self.bot.loop.create_task(
+            commands.errors.MemberNotFound: lambda ctx, error: self.bot.loop.create_task(
+                self.handle_member_not_found(ctx, error)
+            ),
+            commands.errors.BadArgument: lambda ctx, error: self.bot.loop.create_task(self.handle_bad_argument(ctx, error)),
+            commands.errors.MissingPermissions: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_missing_permissions(ctx, error)
             ),
         }
@@ -83,8 +86,8 @@ class EventDispatcher(BaseEventExtension):
             return
 
         handler = self.error_handlers.get(
-            error,
-            lambda _ctx, _error: self.bot.logger.exception("Unhandled command at %s" % error.__str__(), exc_info=error),
+            type(error),
+            lambda _ctx, _error: self.bot.logger.exception("Unhandled command at %s" % error.__cause__, exc_info=error),
         )
         handler(ctx, error)
 
@@ -180,28 +183,30 @@ class EventDispatcher(BaseEventExtension):
         spaces = ' ' * len(str(lineo))
         error_message += f'\n{spaces} |\n{spaces} |'
 
-        return await ctx.embed(
+        embed = MoxieEmbed.factory(
+            ctx=ctx,
             title="Oh no! moxie ran into an error :s",
             description=(
                 "```sh\n"
                 "error: missing required argument\n"
-                f"{spaces   }--> $ext/{cog_display.lower()}.py:{lineo}:{lineo + 1}\n"
-                f"{spaces   } |\n"
-                f"{lineo    } | ::{command_usage}\n"
+                f"{spaces}--> $ext/{cog_display.lower()}.py:{lineo}:{lineo + 1}\n"
+                f"{spaces} |\n"
+                f"{lineo} | ::{command_usage}\n"
                 f"{lineo + 1} |   {error_message}\n"
-                f"{spaces   } | => {ctx.command.brief}\n"
-                f"{spaces   } |\n"
-                f"{spaces   } | => For more information use help {ctx.command.name}"
+                f"{spaces} | => {ctx.command.brief}\n"
+                f"{spaces} |\n"
+                f"{spaces} | => For more information use help {ctx.command.name}"
                 "```"
             ),
-            timestamp=ctx.message.created_at,
         )
+        await ctx.send(embed=embed)
 
     @staticmethod
     async def handle_member_not_found(ctx: Context, error: commands.MemberNotFound) -> None:
         failed_to_convert = error.argument
         spaces = ' ' * len(str(ctx.command.callback.__code__.co_firstlineno))
-        return await ctx.embed(
+        embed = MoxieEmbed.factory(
+            ctx=ctx,
             title="moxie could not find what you were looking for :s",
             description=(
                 "```sh\n"
@@ -212,8 +217,8 @@ class EventDispatcher(BaseEventExtension):
                 f"{spaces} | => For more information use help {ctx.command.name}"
                 "```"
             ),
-            timestamp=ctx.message.created_at,
         )
+        await ctx.send(embed=embed)
 
     @staticmethod
     async def handle_bad_argument(ctx: Context, error: commands.BadArgument) -> None:
@@ -238,8 +243,9 @@ class EventDispatcher(BaseEventExtension):
 
         description += f"{spaces} |\n" f"{spaces} | => For more information use help {ctx.command.name}"
 
-        return await ctx.embed(
+        embed = MoxieEmbed.factory(
+            ctx=ctx,
             title=title,
             description=description,
-            timestamp=ctx.message.created_at,
         )
+        await ctx.send(embed=embed)

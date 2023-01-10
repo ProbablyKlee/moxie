@@ -137,7 +137,8 @@ class Context(commands.Context["RoboMoxie"]):
             else:
                 return await self.send(content=content, **kwargs)
 
-    async def wrap(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    @staticmethod
+    async def wrap(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         return await make_async(func)(*args, **kwargs)
 
     async def embed(
