@@ -92,7 +92,7 @@ class EventDispatcher(BaseEventExtension):
             try:
                 if await command.can_run(ctx):
                     command_sequence.append(([command.name].extend(command.aliases)))
-            except Exception as exc:
+            except commands.CommandError as exc:
                 self.bot.logger.debug("Failed to check permissions for command %s", command.name, exc_info=exc)
 
         command_list = list(itertools.chain.from_iterable(command_sequence))  # type: ignore
