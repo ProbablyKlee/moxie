@@ -126,7 +126,7 @@ class BackendEventHandler(BaseEventExtension):
 
         if transcript is not None:
             filename = f"{uuid.uuid4().hex[:16]}.png"
-            message = await transcript.send(file=discord.File(avatar, filename=filename), content="free real estate")
+            message = await transcript.send(file=discord.File(avatar, filename=filename), content="Free real estate")
             await User.insert_history_item(after, "url", message.attachments[0].url, self.bot)
 
     @commands.Cog.listener()
@@ -137,18 +137,18 @@ class BackendEventHandler(BaseEventExtension):
         if before.status != after.status:
             query = """
                     INSERT INTO activity_history (
-                        user_id,
-                        seconds_{},
-                        seconds_{},
-                        last_update, last_status)
-                    VALUES ($1, $2, $3, $4, $5)
-                    ON CONFLICT (user_id)
-                    DO UPDATE SET 
-                        seconds_{} = activity_history.seconds_{} + 
-                        EXTRACT(EPOCH FROM ($4 - activity_history.last_update)),
-                        last_update = $4, 
-                        last_status = $5
-                """.format(
+                    user_id,
+                    seconds_%s,
+                    seconds_%s,
+                    last_update, last_status)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (user_id)
+                DO UPDATE SET 
+                    seconds_%s = activity_history.seconds_%s + 
+                    EXTRACT(EPOCH FROM ($4 - activity_history.last_update)),
+                    last_update = $4, 
+                    last_status = $5
+            """ % (
                 self.status_text[before.status],
                 self.status_text[after.status],
                 self.status_text[before.status],

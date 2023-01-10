@@ -26,13 +26,14 @@ if TYPE_CHECKING:
     from src.classes import RoboMoxie
 
 from .backend import BackendEventHandler
+from .dispatcher import EventDispatcher
 
-extensions = BackendEventHandler
+extensions = BackendEventHandler, EventDispatcher
 
 
-class Event(extensions):
+class Event(*extensions):
     """Base class for all events."""
 
 
 async def setup(bot: RoboMoxie) -> None:
-    await bot.add_cog(extensions(bot))
+    await bot.add_cog(Event(bot))

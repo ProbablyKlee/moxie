@@ -34,6 +34,12 @@ class OperatorInfo(NamedTuple):
 
 
 class Calculator:
+    """
+    See comments at: https://gist.github.com/qt-haskell/a5464b224f6ffcafd4486022dc6e1e47
+    Uses the shunting-yard algorithm to convert an infix expression to RPN.
+    And uses reverse polish notation to evaluate the expression.
+    """
+
     _ops = {
         '(': OperatorInfo(precedence=9, associativity='left'),
         '^': OperatorInfo(precedence=4, associativity='right'),
@@ -126,11 +132,9 @@ class Calculator:
     def calculate(self) -> Union[float, int]:
         tokens = self._tokenize(self.expression)
         rpn = self._parse_expression(tokens)
-        result = self._evaluate_rpn(rpn)
+        result = str(self._evaluate_rpn(rpn))
 
-        if result.is_integer():
-            return int(result)
-        return result
+        return int(result) if result.isdigit() else float(result)
 
     def __repr__(self) -> str:
         return f'Calculator({self.expression})'

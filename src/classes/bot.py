@@ -45,7 +45,7 @@ from discord import Message, Interaction
 
 from src.models import Guild, User
 from src.config import Settings, Logger
-from src.utils import PartialCall, InsensitiveMapping
+from src.utils import PartialCall, InsensitiveMapping, make_async
 
 from . import DatabaseConnector, Context
 

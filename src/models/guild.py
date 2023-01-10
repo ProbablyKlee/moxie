@@ -38,8 +38,8 @@ class Guild:
         self.score_counting = record["score_counting"]
         self.score_prefix = record["score_prefix"]
 
-    @classmethod
-    async def create_or_update(cls, guild_id: int, score_counting: bool, score_prefix: str, bot: RoboMoxie) -> None:
+    @staticmethod
+    async def create_or_update(guild_id: int, score_counting: bool, score_prefix: str, bot: RoboMoxie) -> None:
         await bot.db.fetch(
             """
             INSERT INTO guild (guild_id, score_counting, score_prefix)
@@ -52,8 +52,8 @@ class Guild:
             score_prefix,
         )
 
-    @classmethod
-    async def insert_many(cls, guilds: Sequence[discord.Guild], bot: RoboMoxie) -> None:
+    @staticmethod
+    async def insert_many(guilds: Sequence[discord.Guild], bot: RoboMoxie) -> None:
         return await bot.db.execute_many(
             """
             INSERT INTO guild (guild_id)

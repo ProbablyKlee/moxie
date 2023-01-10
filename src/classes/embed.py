@@ -19,8 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-from __future__ import annotations
-
 import datetime
 
 from typing import (
@@ -59,14 +57,14 @@ class MoxieEmbed(Embed):
                 self.add_field(name=name, value=value, inline=inline)
 
     @classmethod
-    def factory(cls, ctx: Context, **kwargs: Any) -> MoxieEmbed:
+    def factory(cls, ctx: "Context", **kwargs: Any) -> "MoxieEmbed":
         """Base factory method for creating an embed."""
         instance = cls(timestamp=utils.utcnow(), **kwargs)
         instance.set_footer(text=f"Invoked by {ctx.author}", icon_url=ctx.author.display_avatar.url)
         return instance
 
     @classmethod
-    def action(cls, title: str, gif: str, footer: str, **kwargs: Any) -> MoxieEmbed:
+    def action(cls, title: str, gif: str, footer: str, **kwargs: Any) -> "MoxieEmbed":
         """Factory method for creating an embed for an action."""
         instance = cls(title=title, **kwargs)
         instance.set_image(url=gif)
