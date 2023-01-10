@@ -124,4 +124,6 @@ class EventDispatcher(BaseEventExtension):
         timestamp = discord.utils.format_dt(
             datetime.datetime.utcnow() + datetime.timedelta(seconds=error.retry_after), style="R"
         )
-        await ctx.send("⏰ | %s, you are on cooldown. Try again in %s." % (ctx.author.mention, timestamp))
+        await ctx.send(
+            "⏰ | %s, you are on cooldown. Try again in %s." % (ctx.author.mention, timestamp), delete_after=error.retry_after
+        )

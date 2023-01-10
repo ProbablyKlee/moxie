@@ -132,11 +132,9 @@ class Calculator:
     def calculate(self) -> Union[float, int]:
         tokens = self._tokenize(self.expression)
         rpn = self._parse_expression(tokens)
-        result = self._evaluate_rpn(rpn)
+        result = str(self._evaluate_rpn(rpn))
 
-        if result.is_integer():
-            return int(result)
-        return result
+        return int(result) if result.isdigit() else float(result)
 
     def __repr__(self) -> str:
         return f'Calculator({self.expression})'
