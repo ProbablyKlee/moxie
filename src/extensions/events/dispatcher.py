@@ -44,7 +44,7 @@ class EventDispatcher(BaseEventExtension):
         super().__init__(bot)
 
         self.cached_ttl: TimeToLiveCache = TimeToLiveCache()
-        self.error_handlers: Dict[Type[commands.CommandError], Callable[[Context, commands.CommandError], None]] = {
+        self.error_handlers: Dict[commands.CommandError, Callable[[Context, commands.CommandError], None]] = {
             commands.NoPrivateMessage: lambda *_: None,
             commands.DisabledCommand: lambda *_: None,
             commands.PrivateMessageOnly: lambda *_: None,
@@ -81,7 +81,8 @@ class EventDispatcher(BaseEventExtension):
             return
 
         handler = self.error_handlers.get(
-            type(error), lambda _ctx, _error: self.bot.logger.exception("Unhandled command at %s" % error, exc_info=error)
+            error,
+            lambda _ctx, _error: self.bot.logger.exception("Unhandled command at %s" % error.__str__(), exc_info=error),
         )
         handler(ctx, error)
 
