@@ -21,7 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Callable
+from typing import TYPE_CHECKING, Dict, Callable, Any
 
 import copy
 import datetime
@@ -44,10 +44,12 @@ class EventDispatcher(BaseEventExtension):
         super().__init__(bot)
 
         self.cached_ttl: TimeToLiveCache = TimeToLiveCache()
-        self.error_handlers: Dict[commands.CommandError, Callable[[Context, commands.CommandError], None]] = {
+        self.error_handlers: Dict[Any, Callable[[Context, commands.CommandError], None]] = {
             commands.NoPrivateMessage: lambda *_: None,
+            commands.BotMissingPermissions: lambda *_: None,
             commands.DisabledCommand: lambda *_: None,
             commands.PrivateMessageOnly: lambda *_: None,
+            commands.NotOwner: lambda *_: None,
             commands.CommandNotFound: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_command_not_found(ctx, error)
             ),
@@ -57,11 +59,11 @@ class EventDispatcher(BaseEventExtension):
             commands.MissingRequiredArgument: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_required_argument(ctx, error)
             ),
-            commands.MemberNotFound: lambda ctx, error: self.bot.dispatch("member_not_found", ctx, error),
-            commands.BadArgument: lambda ctx, error: self.bot.dispatch("bad_argument", ctx, error),
-            commands.MissingPermissions: lambda ctx, error: self.bot.dispatch("missing_permissions", ctx, error),
-            commands.BotMissingPermissions: lambda ctx, error: self.bot.dispatch("bot_missing_permissions", ctx, error),
-            commands.NotOwner: lambda ctx, error: self.bot.dispatch("not_owner", ctx, error),
+            commands.MemberNotFound: lambda ctx, error: self.bot.loop.create_task(self.handle_member_not_found(ctx, error)),
+            commands.BadArgument: lambda ctx, error: self.bot.loop.create_task(self.handle_bad_argument(ctx, error)),
+            commands.MissingPermissions: lambda ctx, error: self.bot.loop.create_task(
+                self.handle_missing_permissions(ctx, error)
+            ),
         }
 
     def insert_user_rate_limit(self, user: discord.Member, rate_limit: int | float) -> None:
@@ -192,5 +194,52 @@ class EventDispatcher(BaseEventExtension):
                 f"{spaces   } | => For more information use help {ctx.command.name}"
                 "```"
             ),
+            timestamp=ctx.message.created_at,
+        )
+
+    @staticmethod
+    async def handle_member_not_found(ctx: Context, error: commands.MemberNotFound) -> None:
+        failed_to_convert = error.argument
+        spaces = ' ' * len(str(ctx.command.callback.__code__.co_firstlineno))
+        return await ctx.embed(
+            title="moxie could not find what you were looking for :s",
+            description=(
+                "```sh\n"
+                f"error: member not found\n"
+                f"{spaces} |\n"
+                f"{spaces} | => {failed_to_convert} is not a valid member\n"
+                f"{spaces} |\n"
+                f"{spaces} | => For more information use help {ctx.command.name}"
+                "```"
+            ),
+            timestamp=ctx.message.created_at,
+        )
+
+    @staticmethod
+    async def handle_bad_argument(ctx: Context, error: commands.BadArgument) -> None:
+        await ctx.send("⚠ | %s, %s" % (ctx.author.mention, error))
+
+    @staticmethod
+    async def handle_missing_permissions(ctx: Context, error: commands.MissingPermissions) -> None:
+        lineo = error.__traceback__.tb_frame.f_lineno
+        spaces = ' ' * len(str(lineo + 1))
+
+        title = ("Looks like you don't have the permissions to do that :s",)
+        description = (
+            "```sh\n"
+            "error: missing permissions\n"
+            f"{spaces} |--> $commands.MissingPermissions:{lineo}:{lineo + 1}\n"
+            f"{spaces} |\n"
+            f"{lineo} | => {ctx.command.name} requires the following permissions:\n"
+        )
+
+        for perm in error.missing_permissions:
+            description += f"{spaces} | >> {perm}\n"
+
+        description += f"{spaces} |\n" f"{spaces} | => For more information use help {ctx.command.name}"
+
+        return await ctx.embed(
+            title=title,
+            description=description,
             timestamp=ctx.message.created_at,
         )
