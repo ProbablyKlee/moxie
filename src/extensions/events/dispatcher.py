@@ -31,7 +31,7 @@ import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from src.classes import Context, RoboMoxie
+    from src.classes import Context, RoboMoxie, MoxieEmbed
 
 from src.utils import TimeToLiveCache
 from src.base import BaseEventExtension
@@ -54,7 +54,9 @@ class EventDispatcher(BaseEventExtension):
             commands.CommandOnCooldown: lambda ctx, error: self.bot.loop.create_task(
                 self.handle_command_on_cooldown(ctx, error)
             ),
-            commands.MissingRequiredArgument: lambda ctx, error: self.bot.dispatch("missing_required_argument", ctx, error),
+            commands.MissingRequiredArgument: lambda ctx, error: self.bot.loop.create_task(
+                self.handle_required_argument(ctx, error)
+            ),
             commands.MemberNotFound: lambda ctx, error: self.bot.dispatch("member_not_found", ctx, error),
             commands.BadArgument: lambda ctx, error: self.bot.dispatch("bad_argument", ctx, error),
             commands.MissingPermissions: lambda ctx, error: self.bot.dispatch("missing_permissions", ctx, error),
@@ -126,4 +128,67 @@ class EventDispatcher(BaseEventExtension):
         )
         await ctx.send(
             "⏰ | %s, you are on cooldown. Try again in %s." % (ctx.author.mention, timestamp), delete_after=error.retry_after
+        )
+
+    @staticmethod
+    async def handle_required_argument(ctx: Context, error: commands.MissingRequiredArgument) -> None:
+        missing_argument = error.param.name
+        signature = ctx.command.signature
+        signature_split = signature.split(" ")
+
+        command_usage = f"{ctx.command.name} "
+        error_message = f' ' * len(ctx.command.name) + " "
+        command_list: Dict[str, str] = {}
+
+        previous = None
+        for pos, val in enumerate(signature_split):
+            key = val.replace('<', '').replace('>', '')
+            if pos == 0:
+                command_list[key] = '^' * len(key) if key == missing_argument else ' ' * len(key)
+            else:
+                if key == missing_argument:
+                    command_list[key] = '^' * len(key)
+                else:
+                    if signature_split[pos - 1] == '<' + missing_argument + '>':
+                        command_list[key] = '^' * len(key)
+                        previous = key
+                    else:
+                        if previous:
+                            if '^' in command_list[previous]:
+                                command_list[key] = '^' * len(key)
+                            else:
+                                command_list[key] = ' ' * len(key)
+                        else:
+                            previous = signature_split[pos - 1].replace('<', '').replace('>', '')
+                            if '^' in command_list[previous]:
+                                command_list[key] = '^' * len(key)
+                            else:
+                                command_list[key] = ' ' * len(key)
+
+        for key, val in command_list.items():
+            command_usage += f"{key} "
+            error_message += f"{val} "
+
+        command = ctx.invoked_subcommand or ctx.command
+        lineo = command.callback.__code__.co_firstlineno
+        cog_display = command.cog.qualified_name if command.cog else 'unknown'
+
+        spaces = ' ' * len(str(lineo))
+        error_message += f'\n{spaces} |\n{spaces} |'
+
+        return await ctx.embed(
+            title="Oh no! Fishie ran into an error :s",
+            description=(
+                "```sh\n"
+                "error: missing required argument\n"
+                f"{spaces   }--> $ext/{cog_display.lower()}.py:{lineo}:{lineo + 1}\n"
+                f"{spaces   } |\n"
+                f"{lineo    } | ::{command_usage}\n"
+                f"{lineo + 1} |   {error_message}\n"
+                f"{spaces   } | => {ctx.command.brief}\n"
+                f"{spaces   } |\n"
+                f"{spaces   } | => For more information use help {ctx.command.name}"
+                "```"
+            ),
+            timestamp=ctx.message.created_at,
         )
