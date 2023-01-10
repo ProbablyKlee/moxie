@@ -21,7 +21,7 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Callable, Type
+from typing import TYPE_CHECKING, Dict, Callable
 
 import copy
 import datetime
@@ -31,7 +31,7 @@ import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from src.classes import Context, RoboMoxie, MoxieEmbed
+    from src.classes import Context, RoboMoxie
 
 from src.utils import TimeToLiveCache
 from src.base import BaseEventExtension
@@ -103,7 +103,8 @@ class EventDispatcher(BaseEventExtension):
 
         confirm = await ctx.confirm(
             message=(
-                f"Sorry, but the command **{ctx.invoked_with}** was not found.\n" f"**did you mean... `{matches[0]}`?**"
+                "Sorry, but the command **%s** was not found.\n"
+                f"**did you mean... `%s`?**" % (ctx.invoked_with, matches[0])
             ),
             delete_after_cancel=True,
             delete_after_confirm=True,
