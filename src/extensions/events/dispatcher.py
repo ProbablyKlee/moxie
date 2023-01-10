@@ -177,7 +177,7 @@ class EventDispatcher(BaseEventExtension):
         error_message += f'\n{spaces} |\n{spaces} |'
 
         return await ctx.embed(
-            title="Oh no! Fishie ran into an error :s",
+            title="Oh no! moxie ran into an error :s",
             description=(
                 "```sh\n"
                 "error: missing required argument\n"
